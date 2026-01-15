@@ -1,0 +1,424 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+contract GGWStake is ReentrancyGuard {
+    address public owner;
+
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner");
+        _;
+    }
+    struct Deposit {
+        address owner;
+        uint256 amount;
+        uint256 monthIndex;
+        uint256 depositStart;
+        uint256 depositClosed;
+        uint256 unlockMonthIndex;
+        uint256 lastAccruedMonthIdx;
+        bool active;
+    }
+
+    struct MonthConfig {
+        uint256 start;
+        uint256 end;
+        uint256 rateBps; // 0 → use globalRateBps
+    }
+
+    // --- Token & Rates ---
+    IERC20 public immutable stakingToken;
+    uint256 public globalRateBps;
+
+    // --- Users & Deposits ---
+    address[] public allUsers;
+    mapping(address => bool) public isUser;
+    mapping(address => uint256[]) public userDeposits; // address → depositIds
+    uint256 public lastKnownMonthIndex = 0;
+    Deposit[] public deposits;
+    uint256 public openedDeposits;
+    uint256 public depositsAmount;
+    mapping(uint256 => uint256) public rewardsByMonths;
+
+    // --- Months ---
+    MonthConfig[] public months;
+    mapping (uint256 => uint256) public monthDepositsCount;
+    mapping (uint256 => uint256) public monthDepositsAmount;
+
+    // --- Constructor ---
+    constructor(address _stakingToken, uint256 _globalRateBps) {
+        require(_stakingToken != address(0), "Token: zero");
+        require(_globalRateBps <= 10_000, "Rate > 100%");
+        owner = msg.sender;
+        stakingToken = IERC20(_stakingToken);
+        globalRateBps = _globalRateBps;
+    }
+
+    // --- Admin: User & Deposit Queries ---
+    function getAllUsers() external view returns (address[] memory) {
+        return allUsers;
+    }
+
+    function getUserDeposits(address user) external view returns (uint256[] memory) {
+        return userDeposits[user];
+    }
+
+    function getDepositById(uint256 depositId) external view returns (Deposit memory) {
+        return deposits[depositId];
+    }
+
+    function getTotalUsers() external view returns (uint256) {
+        return allUsers.length;
+    }
+
+    function getTotalDeposits() external view returns (uint256) {
+        return deposits.length;
+    }
+
+    // --- Admin: Global Rate ---
+    function setGlobalRateBps(uint256 _rateBps) external onlyOwner {
+        require(_rateBps <= 10_000, "Rate > 100%");
+        globalRateBps = _rateBps;
+        emit GlobalRateUpdated(_rateBps);
+    }
+
+    // --- Admin: Months ---
+    function addMonth(uint256 start, uint256 end, uint256 rateBps) external onlyOwner {
+        _addSingleMonth(start, end, rateBps);
+        emit MonthAdded(months.length - 1, start, end, rateBps);
+    }
+
+    function addMonthsBatch(
+        uint256[] calldata starts,
+        uint256[] calldata ends,
+        uint256[] calldata rates
+    ) external onlyOwner {
+        require(starts.length == ends.length && starts.length == rates.length, "Length mismatch");
+        require(starts.length > 0, "Empty");
+
+        for (uint256 i = 0; i < starts.length; i++) {
+            _addSingleMonth(starts[i], ends[i], rates[i]);
+        }
+        emit MonthsBatchAdded(months.length - starts.length, months.length - 1);
+    }
+
+    function editMonth(uint256 idx, uint256 start, uint256 end, uint256 rateBps) external onlyOwner {
+        require(idx < months.length, "Index OOB");
+        require(start < end, "Invalid range");
+        if (rateBps != 0) require(rateBps <= 10_000, "Rate > 100%");
+        require(start > block.timestamp, "Started");
+
+        if (idx > 0) require(start >= months[idx - 1].end, "Seq");
+        if (idx + 1 < months.length) require(end <= months[idx + 1].start, "Overlap");
+
+        months[idx] = MonthConfig(start, end, rateBps);
+        emit MonthEdited(idx, start, end, rateBps);
+    }
+
+    function deleteLastMonth() external onlyOwner {
+        require(months.length > 0, "None");
+        require(months[months.length - 1].start > block.timestamp, "Started");
+        months.pop();
+        emit MonthDeleted(months.length);
+    }
+
+    function _addSingleMonth(uint256 start, uint256 end, uint256 rateBps) internal {
+        require(start < end, "Invalid range");
+        if (rateBps != 0) require(rateBps <= 10_000, "Rate > 100%");
+        if (months.length > 0) require(start >= months[months.length - 1].end, "Seq");
+        months.push(MonthConfig(start, end, rateBps));
+    }
+
+    uint256 public minLockMonths = 1;
+    uint256 public minLockAmount = 1 ether;
+    function setMinLockAmount(uint256 newMinLockAmount) public onlyOwner {
+        minLockAmount = newMinLockAmount;
+    }
+    function setMinLockMonths(uint256 newMinLockMonths) public onlyOwner {
+        minLockMonths = newMinLockMonths;
+    }
+    // --- User: Create Deposit ---
+    function createDeposit(uint256 amount, uint256 lockMonths) external nonReentrant {
+        require(amount >= minLockAmount, "Min amount");
+        require(lockMonths >= minLockMonths, "Lock must be greaer");
+        require(months.length > 0, "No months");
+
+        uint256 currentIdx = _getCurrentMonthIndex();
+        require(currentIdx < months.length, "Time not covered");
+
+        uint256 unlockMonthIndex = currentIdx + lockMonths;
+        require(unlockMonthIndex <= months.length, "Lock period exceeds configured months");
+
+        address user = msg.sender;
+        require(stakingToken.transferFrom(user, address(this), amount), "Transfer failed");
+
+        // Register user if first deposit
+        if (!isUser[user]) {
+            isUser[user] = true;
+            allUsers.push(user);
+        }
+
+        deposits.push(Deposit({
+            owner: user,
+            amount: amount,
+            monthIndex: currentIdx,
+            depositStart: block.timestamp,
+            depositClosed: 0,
+            unlockMonthIndex: unlockMonthIndex,
+            lastAccruedMonthIdx: currentIdx,
+            active: true
+        }));
+
+        uint256 depositId = deposits.length - 1;
+        userDeposits[user].push(depositId);
+
+        lastKnownMonthIndex = currentIdx;
+
+        depositsAmount += amount;
+        openedDeposits++;
+        emit DepositCreated(user, depositId, amount, lockMonths, unlockMonthIndex);
+    }
+
+    // --- User: Withdraw ---
+    function withdrawRewardsOnly(uint256 depositId) external nonReentrant {
+        Deposit storage dep = deposits[depositId];
+        require(dep.active, "Inactive");
+        require(dep.owner == msg.sender, "Not owner");
+
+        uint256 reward = calculatePendingRewardForDeposit(depositId);
+        require(reward > 0, "No rewards");
+
+        uint256 endIdx = _findLastCompletedMonth(dep.lastAccruedMonthIdx, 0);
+        dep.lastAccruedMonthIdx = endIdx;
+
+        require(stakingToken.transfer(msg.sender, reward), "Transfer failed");
+        lastKnownMonthIndex = _getCurrentMonthIndex();
+        emit RewardsWithdrawn(msg.sender, depositId, reward);
+    }
+
+    function withdrawPrincipalAndRewards(uint256 depositId) external nonReentrant {
+        Deposit storage dep = deposits[depositId];
+        require(dep.active, "Inactive");
+        require(dep.owner == msg.sender, "Not owner");
+
+        uint256 currentIdx = _getCurrentMonthIndex();
+        require(currentIdx >= dep.unlockMonthIndex, "Locked");
+
+        uint256 reward = calculatePendingRewardForDeposit(depositId);
+        uint256 total = dep.amount + reward;
+
+        depositsAmount -= dep.amount;
+
+        dep.amount = 0;
+        dep.active = false;
+        dep.depositClosed = block.timestamp;
+
+        uint256 endIdx = _findLastCompletedMonth(dep.lastAccruedMonthIdx, 0);
+        dep.lastAccruedMonthIdx = endIdx;
+        lastKnownMonthIndex = currentIdx;
+        openedDeposits--;
+        
+        require(stakingToken.transfer(msg.sender, total), "Transfer failed");
+        emit PrincipalWithdrawn(msg.sender, depositId, total);
+    }
+
+    // --- Core Logic ---
+    function _getEffectiveRateBps(uint256 monthIndex) internal view returns (uint256) {
+        uint256 rate = months[monthIndex].rateBps;
+        return rate == 0 ? globalRateBps : rate;
+    }
+
+
+    function calculateReward(
+        uint256 amount,
+        uint256 startMonthIdx,
+        uint256 lockMonths,
+        uint256 depositStart
+    ) public view returns (uint256) {
+        if (amount == 0 || lockMonths == 0 || startMonthIdx >= months.length) {
+            return 0;
+        }
+
+        uint256 endMonthIdx = startMonthIdx + lockMonths;
+        if (endMonthIdx > months.length) {
+            endMonthIdx = months.length;
+            if (endMonthIdx <= startMonthIdx) return 0;
+        }
+        if (depositStart == 0) depositStart = block.timestamp;
+        // Определяем, до какого месяца можно начислять (только завершённые)
+        // Но так как это preview — считаем до endMonthIdx (как будто все месяцы завершены)
+        // Однако для consistency с pending-логикой — считаем только завершённые на текущий момент
+        // Но вы, скорее всего, хотите "максимальный прогноз", поэтому:
+        uint256 actualEnd = endMonthIdx; // предполагаем, что все месяцы пройдут
+
+        uint256 reward = 0;
+
+        for (uint256 i = startMonthIdx; i < actualEnd; i++) {
+            if (i >= months.length) break;
+
+            MonthConfig memory month = months[i];
+            uint256 rateBps = _getEffectiveRateBps(i);
+            uint256 monthlyReward = (amount * rateBps) / 10_000;
+
+            if (i == startMonthIdx) {
+                // Пропорционально от depositStart до конца месяца
+                uint256 monthStart = month.start;
+                uint256 monthEnd = month.end;
+                uint256 monthLength = monthEnd - monthStart;
+
+                uint256 effectiveStart = depositStart > monthStart ? depositStart : monthStart;
+                uint256 effectiveEnd = monthEnd; // предполагаем, что месяц завершится
+
+                if (effectiveStart >= effectiveEnd) {
+                    continue;
+                }
+
+                uint256 activeSeconds = effectiveEnd - effectiveStart;
+                if (monthLength == 0) continue;
+
+                reward += (monthlyReward * activeSeconds) / monthLength;
+            } else {
+                // Полный месяц
+                reward += monthlyReward;
+            }
+        }
+
+        return reward;
+    }
+    function _getCurrentMonthIndexAt(uint256 ts) internal view returns (uint256) {
+        for (uint256 i = 0; i < months.length; i++) {
+            if (ts >= months[i].start && ts < months[i].end) {
+                return i;
+            }
+        }
+        return months.length;
+    }
+    function calculateRewardByMonths(
+        uint256 amount,
+        uint256 lockMonths,
+        uint256 depositStart
+    ) public view returns (uint256) {
+        if (amount == 0 || lockMonths == 0) return 0;
+
+        // Найти индекс месяца, в который попадает depositStart
+        if (depositStart == 0) depositStart = block.timestamp;
+        uint256 startMonthIdx = _getCurrentMonthIndexAt(depositStart);
+        if (startMonthIdx >= months.length) return 0;
+
+        uint256 endMonthIdx = startMonthIdx + lockMonths;
+        if (endMonthIdx > months.length) {
+            endMonthIdx = months.length;
+        }
+        if (endMonthIdx <= startMonthIdx) return 0;
+
+        uint256 reward = 0;
+
+        for (uint256 i = startMonthIdx; i < endMonthIdx; i++) {
+            MonthConfig memory month = months[i];
+            uint256 rateBps = _getEffectiveRateBps(i);
+            uint256 monthlyReward = (amount * rateBps) / 10_000;
+
+            if (i == startMonthIdx) {
+                // Первый месяц — частично
+                uint256 effectiveStart = depositStart > month.start ? depositStart : month.start;
+                uint256 effectiveEnd = month.end; // предполагаем, что месяц завершится
+                if (effectiveStart >= effectiveEnd) continue;
+
+                uint256 activeSeconds = effectiveEnd - effectiveStart;
+                uint256 monthLength = month.end - month.start;
+                if (monthLength == 0) continue;
+
+                reward += (monthlyReward * activeSeconds) / monthLength;
+            } else {
+                // Полные месяцы
+                reward += monthlyReward;
+            }
+        }
+
+        return reward;
+    }
+    function calculatePendingRewardForDeposit(uint256 depositId) public view returns (uint256) {
+        Deposit memory dep = deposits[depositId];
+        if (dep.amount == 0 || !dep.active) return 0;
+
+        uint256 startMonthIdx = dep.lastAccruedMonthIdx;
+        uint256 endMonthIdx = _findLastCompletedMonth(startMonthIdx, 0);
+        if (endMonthIdx <= startMonthIdx) return 0;
+
+        uint256 reward = 0;
+        uint256 amount = dep.amount;
+
+        for (uint256 i = startMonthIdx; i < endMonthIdx; i++) {
+            MonthConfig memory month = months[i];
+            uint256 rateBps = _getEffectiveRateBps(i);
+            uint256 monthlyReward = (amount * rateBps) / 10_000;
+
+            // Особая логика только для первого месяца депозита
+            if (i == dep.monthIndex) {
+                // Депозит начался в этом месяце — считаем долю
+                uint256 monthStart = month.start;
+                uint256 monthEnd = month.end;
+                uint256 monthLength = monthEnd - monthStart;
+
+                // Время, с которого депозит "действует" в этом месяце
+                uint256 effectiveStart = dep.depositStart > monthStart ? dep.depositStart : monthStart;
+                // Мы считаем только до конца месяца (он завершён, иначе не вошёл бы в endMonthIdx)
+                uint256 effectiveEnd = monthEnd;
+
+                if (effectiveStart >= effectiveEnd) {
+                    // Депозит начат после окончания месяца — пропуск (теоретически невозможно)
+                    continue;
+                }
+
+                uint256 activeSeconds = effectiveEnd - effectiveStart;
+
+                // Пропорциональное вознаграждение: (activeSeconds / monthLength) * monthlyReward
+                // Избегаем деления до умножения для точности
+                reward += (monthlyReward * activeSeconds) / monthLength;
+            } else {
+                // Полный месяц — полный процент
+                reward += monthlyReward;
+            }
+        }
+
+        return reward;
+    }
+
+    function _getCurrentMonthIndex() internal view returns (uint256) {
+        uint256 ts = block.timestamp;
+        for (uint256 i = lastKnownMonthIndex; i < months.length; i++) {
+            if (ts >= months[i].start && ts < months[i].end) {
+                return i;
+            }
+        }
+        return months.length;
+    }
+
+    function _findLastCompletedMonth(uint256 fromIndex, uint256 ts) internal view returns (uint256) {
+        if (ts == 0) ts = block.timestamp;
+        uint256 i = fromIndex;
+        while (i < months.length && months[i].end <=ts) {
+            unchecked { i++; }
+        }
+        return i;
+    }
+
+    // --- Events ---
+    event DepositCreated(address indexed user, uint256 depositId, uint256 amount, uint256 lockMonths, uint256 unlockMonthIndex);
+    event PrincipalWithdrawn(address indexed user, uint256 depositId, uint256 amount);
+    event RewardsWithdrawn(address indexed user, uint256 depositId, uint256 reward);
+    event GlobalRateUpdated(uint256 rateBps);
+    event MonthAdded(uint256 indexed monthIndex, uint256 start, uint256 end, uint256 rateBps);
+    event MonthsBatchAdded(uint256 startIndex, uint256 endIndex);
+    event MonthEdited(uint256 indexed monthIndex, uint256 start, uint256 end, uint256 rateBps);
+    event MonthDeleted(uint256 lengthAfterDeletion);
+
+    // --- Emergency ---
+    function recoverToken(address token, uint256 amount) external onlyOwner {
+        require(token != address(stakingToken), "Cannot recover staking token");
+        require(IERC20(token).transfer(owner, amount), "Recovery failed");
+    }
+}
