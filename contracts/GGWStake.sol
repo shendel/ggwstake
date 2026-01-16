@@ -6,13 +6,18 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract GGWStake is ReentrancyGuard {
     address public owner;
-
+    address public oracle;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
         _;
     }
+    modifier onlyOwnerOrOracle() {
+        require(msg.sender == owner || msg.sender == oracle, "Only owner or oracle");
+        _;
+    }
     struct Deposit {
+        uint256 depositId;
         address owner;
         uint256 amount;
         uint256 monthIndex;
@@ -20,7 +25,12 @@ contract GGWStake is ReentrancyGuard {
         uint256 depositClosed;
         uint256 unlockMonthIndex;
         uint256 lastAccruedMonthIdx;
+        uint256 pendingReward;
         bool active;
+        bool isSaved; // Deposit closed without reward
+        uint256 savedReward;
+        bool ownRate; // For lock - ownRate = true, rate = 0 (for tokens after bridge)
+        uint256 rate;
     }
 
     struct MonthConfig {
@@ -32,6 +42,8 @@ contract GGWStake is ReentrancyGuard {
     // --- Token & Rates ---
     IERC20 public immutable stakingToken;
     uint256 public globalRateBps;
+    uint256 public minLockMonths = 1;
+    uint256 public minLockAmount = 1 ether;
 
     // --- Users & Deposits ---
     address[] public allUsers;
@@ -39,20 +51,26 @@ contract GGWStake is ReentrancyGuard {
     mapping(address => uint256[]) public userDeposits; // address → depositIds
     uint256 public lastKnownMonthIndex = 0;
     Deposit[] public deposits;
-    uint256 public openedDeposits;
+    mapping(uint256 => bool) public byOracle; // Deposit created via oracle for user
+    uint256[] public activeDeposits;
+    mapping(uint256 => uint256) public activeDepositsIndex;
+    uint256 public activeDepositsCount;
     uint256 public depositsAmount;
-    mapping(uint256 => uint256) public rewardsByMonths;
+    uint256 public rewardsPayed;
+    uint256 public bankAmount;
 
     // --- Months ---
     MonthConfig[] public months;
     mapping (uint256 => uint256) public monthDepositsCount;
     mapping (uint256 => uint256) public monthDepositsAmount;
+    mapping (uint256 => uint256) public monthRewardsAmount;
 
     // --- Constructor ---
     constructor(address _stakingToken, uint256 _globalRateBps) {
         require(_stakingToken != address(0), "Token: zero");
         require(_globalRateBps <= 10_000, "Rate > 100%");
         owner = msg.sender;
+        oracle = msg.sender;
         stakingToken = IERC20(_stakingToken);
         globalRateBps = _globalRateBps;
     }
@@ -61,13 +79,74 @@ contract GGWStake is ReentrancyGuard {
     function getAllUsers() external view returns (address[] memory) {
         return allUsers;
     }
+    function getUsersCount() external view returns (uint256) {
+        return allUsers.length;
+    }
+    function getUsers(uint256 _offset, uint256 _limit) external view returns (address[] memory ret) {
+        if (_limit == 0) _limit = allUsers.length;
+        uint256 iEnd = _offset + _limit;
+        if (_offset > allUsers.length) return ret;
+        if (iEnd > allUsers.length) iEnd = allUsers.length;
 
-    function getUserDeposits(address user) external view returns (uint256[] memory) {
+        ret = new address[](iEnd - _offset);
+        for (uint256 i = 0; i < iEnd - _offset ; i++) {
+            ret[i] = allUsers[
+                allUsers.length - i - _offset - 1
+            ];
+        }
+
+        return ret;
+    }
+    function getUserDepositsIds(address user) external view returns (uint256[] memory) {
         return userDeposits[user];
     }
+    function getUserDepositsCount(address user) external view returns (uint256) {
+        return userDeposits[user].length;
+    }
+    function getUserDeposits(address user, uint256 _offset, uint256 _limit) external view returns (Deposit[] memory ret) {
+        if (_limit == 0) _limit = userDeposits[user].length;
+        uint256 iEnd = _offset + _limit;
+        if (_offset > userDeposits[user].length) return ret;
+        if (iEnd > userDeposits[user].length) iEnd = userDeposits[user].length;
 
-    function getDepositById(uint256 depositId) external view returns (Deposit memory) {
-        return deposits[depositId];
+        ret = new Deposit[](iEnd - _offset);
+        for (uint256 i = 0; i < iEnd - _offset ; i++) {
+            ret[i] = deposits[
+                userDeposits[user][
+                    userDeposits[user].length - i - _offset - 1
+                ]
+            ];
+            ret[i].pendingReward = calculatePendingRewardForDeposit(ret[i].depositId);
+        }
+
+        return ret;
+    }
+    function getActiveDepositsCount() external view returns (uint256) {
+        return activeDeposits.length;
+    }
+    function getActiveDeposits(uint256 _offset, uint256 _limit) external view returns (Deposit[] memory ret) {
+        if (_limit == 0) _limit = activeDeposits.length;
+        uint256 iEnd = _offset + _limit;
+        if (_offset > activeDeposits.length) return ret;
+        if (iEnd > activeDeposits.length) iEnd = activeDeposits.length;
+
+        ret = new Deposit[](iEnd - _offset);
+        for (uint256 i = 0; i < iEnd - _offset ; i++) {
+            ret[i] = deposits[
+                activeDeposits[
+                    activeDeposits.length - i - _offset - 1
+                ]
+            ];
+            ret[i].pendingReward = calculatePendingRewardForDeposit(ret[i].depositId);
+        }
+
+        return ret;
+    }
+
+    function getDepositById(uint256 depositId) external view returns (Deposit memory ret) {
+        ret = deposits[depositId];
+        ret.pendingReward = calculatePendingRewardForDeposit(depositId);
+        return ret;
     }
 
     function getTotalUsers() external view returns (uint256) {
@@ -77,7 +156,22 @@ contract GGWStake is ReentrancyGuard {
     function getTotalDeposits() external view returns (uint256) {
         return deposits.length;
     }
+    function getDeposits(uint256 _offset, uint256 _limit) external view returns (Deposit[] memory ret) {
+        if (_limit == 0) _limit = deposits.length;
+        uint256 iEnd = _offset + _limit;
+        if (_offset > deposits.length) return ret;
+        if (iEnd > deposits.length) iEnd = deposits.length;
 
+        ret = new Deposit[](iEnd - _offset);
+        for (uint256 i = 0; i < iEnd - _offset ; i++) {
+            ret[i] = deposits[
+                deposits.length - i - _offset - 1
+            ];
+            ret[i].pendingReward = calculatePendingRewardForDeposit(ret[i].depositId);
+        }
+
+        return ret;
+    }
     // --- Admin: Global Rate ---
     function setGlobalRateBps(uint256 _rateBps) external onlyOwner {
         require(_rateBps <= 10_000, "Rate > 100%");
@@ -132,8 +226,7 @@ contract GGWStake is ReentrancyGuard {
         months.push(MonthConfig(start, end, rateBps));
     }
 
-    uint256 public minLockMonths = 1;
-    uint256 public minLockAmount = 1 ether;
+    
     function setMinLockAmount(uint256 newMinLockAmount) public onlyOwner {
         minLockAmount = newMinLockAmount;
     }
@@ -142,6 +235,13 @@ contract GGWStake is ReentrancyGuard {
     }
     // --- User: Create Deposit ---
     function createDeposit(uint256 amount, uint256 lockMonths) external nonReentrant {
+        _createDeposit(msg.sender, amount, lockMonths, false, 0, false);
+    }
+    function createDepositFor(address user, uint256 amount, uint256 lockMonths, bool ownRate, uint256 rate) external nonReentrant onlyOwnerOrOracle {
+        if (ownRate) require(rate <= 10_000, "Rate > 100%");
+        _createDeposit(user, amount, lockMonths, ownRate, rate, true);
+    }
+    function _createDeposit(address user, uint256 amount, uint256 lockMonths, bool ownRate, uint256 rate, bool createdByOracle) private {
         require(amount >= minLockAmount, "Min amount");
         require(lockMonths >= minLockMonths, "Lock must be greaer");
         require(months.length > 0, "No months");
@@ -152,8 +252,7 @@ contract GGWStake is ReentrancyGuard {
         uint256 unlockMonthIndex = currentIdx + lockMonths;
         require(unlockMonthIndex <= months.length, "Lock period exceeds configured months");
 
-        address user = msg.sender;
-        require(stakingToken.transferFrom(user, address(this), amount), "Transfer failed");
+        require(stakingToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         // Register user if first deposit
         if (!isUser[user]) {
@@ -162,6 +261,7 @@ contract GGWStake is ReentrancyGuard {
         }
 
         deposits.push(Deposit({
+            depositId: deposits.length,
             owner: user,
             amount: amount,
             monthIndex: currentIdx,
@@ -169,16 +269,26 @@ contract GGWStake is ReentrancyGuard {
             depositClosed: 0,
             unlockMonthIndex: unlockMonthIndex,
             lastAccruedMonthIdx: currentIdx,
-            active: true
+            pendingReward: 0,
+            active: true,
+            isSaved: false,
+            savedReward: 0,
+            ownRate: ownRate,
+            rate: rate
         }));
 
         uint256 depositId = deposits.length - 1;
+        byOracle[depositId] = createdByOracle;
         userDeposits[user].push(depositId);
 
         lastKnownMonthIndex = currentIdx;
 
         depositsAmount += amount;
-        openedDeposits++;
+        activeDepositsCount++;
+        activeDeposits.push(depositId);
+        activeDepositsIndex[depositId] = activeDeposits.length - 1;
+        monthDepositsCount[currentIdx]++;
+        monthDepositsAmount[currentIdx] += amount;
         emit DepositCreated(user, depositId, amount, lockMonths, unlockMonthIndex);
     }
 
@@ -190,10 +300,13 @@ contract GGWStake is ReentrancyGuard {
 
         uint256 reward = calculatePendingRewardForDeposit(depositId);
         require(reward > 0, "No rewards");
+        require(bankAmount >= reward, "Empty bank");
 
         uint256 endIdx = _findLastCompletedMonth(dep.lastAccruedMonthIdx, 0);
         dep.lastAccruedMonthIdx = endIdx;
-
+        bankAmount -= reward;
+        rewardsPayed += reward;
+        monthRewardsAmount[endIdx] += reward;
         require(stakingToken.transfer(msg.sender, reward), "Transfer failed");
         lastKnownMonthIndex = _getCurrentMonthIndex();
         emit RewardsWithdrawn(msg.sender, depositId, reward);
@@ -208,21 +321,91 @@ contract GGWStake is ReentrancyGuard {
         require(currentIdx >= dep.unlockMonthIndex, "Locked");
 
         uint256 reward = calculatePendingRewardForDeposit(depositId);
+        require(bankAmount >= reward, "Empty bank");
         uint256 total = dep.amount + reward;
 
         depositsAmount -= dep.amount;
 
-        dep.amount = 0;
         dep.active = false;
         dep.depositClosed = block.timestamp;
 
         uint256 endIdx = _findLastCompletedMonth(dep.lastAccruedMonthIdx, 0);
         dep.lastAccruedMonthIdx = endIdx;
         lastKnownMonthIndex = currentIdx;
-        openedDeposits--;
-        
+        activeDepositsCount--;
+        bankAmount -= reward;
+        rewardsPayed += reward;
+        _removeFromActiveDeposits(depositId);
+        monthRewardsAmount[currentIdx] += reward;
         require(stakingToken.transfer(msg.sender, total), "Transfer failed");
         emit PrincipalWithdrawn(msg.sender, depositId, total);
+    }
+    // User safe deposit tokens, if no reward in bank - user can take back tokens
+    function safeDeposit(uint256 depositId) external nonReentrant {
+        Deposit storage dep = deposits[depositId];
+        require(dep.active, "Inactive");
+        require(dep.owner == msg.sender, "Not owner");
+
+        uint256 currentIdx = _getCurrentMonthIndex();
+        require(currentIdx >= dep.unlockMonthIndex, "Locked");
+
+        uint256 reward = calculatePendingRewardForDeposit(depositId);
+
+        depositsAmount -= dep.amount;
+
+        dep.active = false;
+        dep.isSaved = true;
+        dep.savedReward = reward;
+        dep.depositClosed = block.timestamp;
+
+        lastKnownMonthIndex = currentIdx;
+        activeDepositsCount--;
+        _removeFromActiveDeposits(depositId);
+        monthRewardsAmount[currentIdx] += reward;
+        rewardsPayed += reward;
+        require(stakingToken.transfer(dep.owner, dep.amount), "Transfer failed");
+
+        emit SafeDeposit(dep.owner, dep.depositId, dep.amount, reward);
+    }
+    // cancel deposit created by oracle
+    function cancelDeposit(uint256 depositId) external nonReentrant onlyOwner {
+        Deposit storage dep = deposits[depositId];
+        require(dep.active, "Deposit inactive");
+
+        // Определяем, кому вернуть токены
+        address recipient;
+        if (byOracle[dep.depositId]) {
+            // Создан ораклом → возвращаем админу
+            recipient = msg.sender;
+        } else {
+            // Создан пользователем → возвращаем владельцу
+            recipient = dep.owner;
+        }
+
+        dep.active = false;
+        activeDepositsCount--;
+        depositsAmount -= dep.amount;
+
+        require(stakingToken.transfer(recipient, dep.amount), "Transfer failed");
+        emit DepositCancelled(dep.depositId, recipient, dep.amount);
+    }
+    function getSavedReward(uint256 depositId) external nonReentrant {
+        Deposit storage dep = deposits[depositId];
+        require(!dep.active, "Is active");
+        require(dep.owner == msg.sender, "Not owner");
+        require(dep.isSaved, "Not saved");
+        require(bankAmount >= dep.savedReward, "Empty bank");
+
+        uint256 reward = dep.savedReward;
+        bankAmount -= reward;
+        rewardsPayed += reward;
+        if (reward > 0) {
+            require(stakingToken.transfer(msg.sender, reward), "Transfer failed");
+        }
+
+        dep.isSaved = false;
+        dep.savedReward = 0;
+        emit SavedRewardClaimed(dep.owner, dep.depositId, reward);
     }
 
     // --- Core Logic ---
@@ -296,6 +479,19 @@ contract GGWStake is ReentrancyGuard {
         }
         return months.length;
     }
+    function estimateRequiredBankReserve() external view returns (uint256 estimatedMonthlyRewards) {
+        uint256 maxRateBps = globalRateBps;
+        estimatedMonthlyRewards = (depositsAmount * maxRateBps) / 10_000;
+    }
+    function estimateRequiredBankReservePrecise() external view returns (uint256) {
+        uint256 currentMonth = _getCurrentMonthIndex();
+        if (currentMonth >= months.length) {
+            return 0;
+        }
+
+        uint256 rateBps = _getEffectiveRateBps(currentMonth);
+        return (depositsAmount * rateBps) / 10_000;
+    }
     function calculateRewardByMonths(
         uint256 amount,
         uint256 lockMonths,
@@ -342,7 +538,9 @@ contract GGWStake is ReentrancyGuard {
     }
     function calculatePendingRewardForDeposit(uint256 depositId) public view returns (uint256) {
         Deposit memory dep = deposits[depositId];
+        if (dep.isSaved) return dep.savedReward;
         if (dep.amount == 0 || !dep.active) return 0;
+        
 
         uint256 startMonthIdx = dep.lastAccruedMonthIdx;
         uint256 endMonthIdx = _findLastCompletedMonth(startMonthIdx, 0);
@@ -353,7 +551,7 @@ contract GGWStake is ReentrancyGuard {
 
         for (uint256 i = startMonthIdx; i < endMonthIdx; i++) {
             MonthConfig memory month = months[i];
-            uint256 rateBps = _getEffectiveRateBps(i);
+            uint256 rateBps = (dep.ownRate) ? dep.rate : _getEffectiveRateBps(i);
             uint256 monthlyReward = (amount * rateBps) / 10_000;
 
             // Особая логика только для первого месяца депозита
@@ -405,7 +603,16 @@ contract GGWStake is ReentrancyGuard {
         }
         return i;
     }
+    function _removeFromActiveDeposits(uint256 depositId) internal {
+        uint256 pos = activeDepositsIndex[depositId];
+        uint256 lastDepositId = activeDeposits[activeDeposits.length - 1];
 
+        activeDeposits[pos] = lastDepositId;
+        activeDepositsIndex[lastDepositId] = pos;
+
+        activeDeposits.pop();
+        delete activeDepositsIndex[depositId];
+    }
     // --- Events ---
     event DepositCreated(address indexed user, uint256 depositId, uint256 amount, uint256 lockMonths, uint256 unlockMonthIndex);
     event PrincipalWithdrawn(address indexed user, uint256 depositId, uint256 amount);
@@ -415,10 +622,29 @@ contract GGWStake is ReentrancyGuard {
     event MonthsBatchAdded(uint256 startIndex, uint256 endIndex);
     event MonthEdited(uint256 indexed monthIndex, uint256 start, uint256 end, uint256 rateBps);
     event MonthDeleted(uint256 lengthAfterDeletion);
+    event SafeDeposit(address indexed user, uint256 depositId, uint256 amount, uint256 savedReward);
+    event SavedRewardClaimed(address indexed user, uint256 depositId, uint256 reward);
+    event DepositCancelled(uint256 depositId, address indexed recipient, uint256 amount);
 
+    function withdrawBank(uint256 amount) external onlyOwner {
+        require(bankAmount >= amount, "E1");
+        require(stakingToken.transfer(msg.sender, amount), "E2");
+        bankAmount-=amount;
+    }
+    function addTokensToBank(uint256 amount) external onlyOwnerOrOracle {
+        require(stakingToken.transferFrom(msg.sender, address(this), amount), "E1");
+        bankAmount+=amount;
+    }
+    function setOracle(address newOracle) external onlyOwner {
+        oracle = newOracle;
+    }
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0),"E1");
+        owner = newOwner;
+    }
     // --- Emergency ---
     function recoverToken(address token, uint256 amount) external onlyOwner {
-        require(token != address(stakingToken), "Cannot recover staking token");
-        require(IERC20(token).transfer(owner, amount), "Recovery failed");
+        require(token != address(stakingToken), "E1");
+        require(IERC20(token).transfer(owner, amount), "E2");
     }
 }

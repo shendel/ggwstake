@@ -30,6 +30,31 @@
 				"anonymous": false,
 				"inputs": [
 					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "DepositCancelled",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
 						"indexed": true,
 						"internalType": "address",
 						"name": "user",
@@ -221,6 +246,113 @@
 				"type": "event"
 			},
 			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "savedReward",
+						"type": "uint256"
+					}
+				],
+				"name": "SafeDeposit",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "reward",
+						"type": "uint256"
+					}
+				],
+				"name": "SavedRewardClaimed",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "activeDeposits",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "activeDepositsCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "activeDepositsIndex",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -270,6 +402,19 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "addTokensToBank",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "",
 						"type": "uint256"
 					}
@@ -280,6 +425,38 @@
 						"internalType": "address",
 						"name": "",
 						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "bankAmount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "byOracle",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
 					}
 				],
 				"stateMutability": "view",
@@ -371,6 +548,19 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					}
+				],
+				"name": "cancelDeposit",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
 					},
@@ -381,6 +571,39 @@
 					}
 				],
 				"name": "createDeposit",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "lockMonths",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "ownRate",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rate",
+						"type": "uint256"
+					}
+				],
+				"name": "createDepositFor",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -402,6 +625,11 @@
 				],
 				"name": "deposits",
 				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					},
 					{
 						"internalType": "address",
 						"name": "owner",
@@ -438,9 +666,34 @@
 						"type": "uint256"
 					},
 					{
+						"internalType": "uint256",
+						"name": "pendingReward",
+						"type": "uint256"
+					},
+					{
 						"internalType": "bool",
 						"name": "active",
 						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "isSaved",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "savedReward",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "ownRate",
+						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rate",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -489,12 +742,25 @@
 			},
 			{
 				"inputs": [],
-				"name": "getAllUsers",
+				"name": "estimateRequiredBankReserve",
 				"outputs": [
 					{
-						"internalType": "address[]",
+						"internalType": "uint256",
+						"name": "estimatedMonthlyRewards",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "estimateRequiredBankReservePrecise",
+				"outputs": [
+					{
+						"internalType": "uint256",
 						"name": "",
-						"type": "address[]"
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -504,14 +770,24 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "depositId",
+						"name": "_offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_limit",
 						"type": "uint256"
 					}
 				],
-				"name": "getDepositById",
+				"name": "getActiveDeposits",
 				"outputs": [
 					{
 						"components": [
+							{
+								"internalType": "uint256",
+								"name": "depositId",
+								"type": "uint256"
+							},
 							{
 								"internalType": "address",
 								"name": "owner",
@@ -548,17 +824,268 @@
 								"type": "uint256"
 							},
 							{
+								"internalType": "uint256",
+								"name": "pendingReward",
+								"type": "uint256"
+							},
+							{
 								"internalType": "bool",
 								"name": "active",
 								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isSaved",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "savedReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "ownRate",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rate",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.Deposit[]",
+						"name": "ret",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getActiveDepositsCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAllUsers",
+				"outputs": [
+					{
+						"internalType": "address[]",
+						"name": "",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					}
+				],
+				"name": "getDepositById",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "depositId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "monthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositStart",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositClosed",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "unlockMonthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "lastAccruedMonthIdx",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "pendingReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "active",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isSaved",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "savedReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "ownRate",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rate",
+								"type": "uint256"
 							}
 						],
 						"internalType": "struct GGWStake.Deposit",
-						"name": "",
+						"name": "ret",
 						"type": "tuple"
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_limit",
+						"type": "uint256"
+					}
+				],
+				"name": "getDeposits",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "depositId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "monthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositStart",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositClosed",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "unlockMonthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "lastAccruedMonthIdx",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "pendingReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "active",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isSaved",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "savedReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "ownRate",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rate",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.Deposit[]",
+						"name": "ret",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					}
+				],
+				"name": "getSavedReward",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -593,14 +1120,171 @@
 						"internalType": "address",
 						"name": "user",
 						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_limit",
+						"type": "uint256"
 					}
 				],
 				"name": "getUserDeposits",
 				"outputs": [
 					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "depositId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "monthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositStart",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositClosed",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "unlockMonthIndex",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "lastAccruedMonthIdx",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "pendingReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "active",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isSaved",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "savedReward",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "ownRate",
+								"type": "bool"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rate",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.Deposit[]",
+						"name": "ret",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					}
+				],
+				"name": "getUserDepositsCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					}
+				],
+				"name": "getUserDepositsIds",
+				"outputs": [
+					{
 						"internalType": "uint256[]",
 						"name": "",
 						"type": "uint256[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_limit",
+						"type": "uint256"
+					}
+				],
+				"name": "getUsers",
+				"outputs": [
+					{
+						"internalType": "address[]",
+						"name": "ret",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getUsersCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -723,6 +1407,25 @@
 						"type": "uint256"
 					}
 				],
+				"name": "monthRewardsAmount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
 				"name": "months",
 				"outputs": [
 					{
@@ -746,12 +1449,12 @@
 			},
 			{
 				"inputs": [],
-				"name": "openedDeposits",
+				"name": "oracle",
 				"outputs": [
 					{
-						"internalType": "uint256",
+						"internalType": "address",
 						"name": "",
-						"type": "uint256"
+						"type": "address"
 					}
 				],
 				"stateMutability": "view",
@@ -789,14 +1492,8 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "rewardsByMonths",
+				"inputs": [],
+				"name": "rewardsPayed",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -805,6 +1502,19 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "depositId",
+						"type": "uint256"
+					}
+				],
+				"name": "safeDeposit",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -847,6 +1557,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOracle",
+						"type": "address"
+					}
+				],
+				"name": "setOracle",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "stakingToken",
 				"outputs": [
@@ -857,6 +1580,19 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "transferOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -881,6 +1617,19 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "withdrawBank",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -938,7 +1687,7 @@
 			"bytecodeHash": "ipfs"
 		},
 		"optimizer": {
-			"enabled": false,
+			"enabled": true,
 			"runs": 200
 		},
 		"remappings": []
@@ -961,11 +1710,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0x7acebbf883466b7024aceca24f0e17095222437000c8a6f0d92c5e5aa616cf97",
+			"keccak256": "0x9b2ba09c47ea117cecd27e276c026aa6e84299fbd618701399062d138d7ab3dd",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://d6aa793b6e58384b56c1b85ce2f266c9eea2a5ec67b6b3a8b17eb12c0a1c3e94",
-				"dweb:/ipfs/QmaxNyoxkfEWFB6cwBuZ4YGLwnEf6aFwUK8fyHSbUB9VvF"
+				"bzz-raw://13f733ae92628cc1d01846b129d63772e48b08043c91e7273541a904dbdccc0c",
+				"dweb:/ipfs/QmZuBgTvho9Dbov92QTUroeJtdLraRXdC88uANHYskoMv6"
 			]
 		}
 	},
