@@ -1889,11 +1889,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0xace590f45cc29f942d97e3085f8cbbeda5d093e9443568d4de83dd5fc2a8a781",
+			"keccak256": "0x44b0a1418105f6c93c015c481e174806d0789d0ee1aa62587b1a9b6033431010",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ef4aa401893a8a77e2b3f04a0b9ee11c7e9a11f1480ab9e9f779e2938ba24905",
-				"dweb:/ipfs/QmZzcNEiVBGt55tiZT3xprwUa7wPxHyVhnJHVpkjf8PUDL"
+				"bzz-raw://0e1b150a26b775776c393b0863e95989729a1c017752d13bf1714bb2a154ca94",
+				"dweb:/ipfs/QmUhmPPGFuJnpjeqEwmfT4fBugYHFDtVmevDJKqPXsXXYk"
 			]
 		}
 	},
