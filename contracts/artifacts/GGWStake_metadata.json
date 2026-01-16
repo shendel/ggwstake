@@ -302,6 +302,19 @@
 				"type": "event"
 			},
 			{
+				"inputs": [],
+				"name": "_getCurrentMonthIndex",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -1079,6 +1092,80 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "_offset",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_limit",
+						"type": "uint256"
+					}
+				],
+				"name": "getMonths",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "monthId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "start",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "end",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rateBps",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositsCount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositsAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rewardsAmount",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.MonthSummaryInfo[]",
+						"name": "ret",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getMonthsCount",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "depositId",
 						"type": "uint256"
 					}
@@ -1086,6 +1173,106 @@
 				"name": "getSavedReward",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getSummaryInfo",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "usersCount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "activeDepositsCount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositsCount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "depositsAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "rewardsPayed",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "bankAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint8",
+								"name": "tokenDecimals",
+								"type": "uint8"
+							},
+							{
+								"internalType": "string",
+								"name": "tokenName",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "tokenSymbol",
+								"type": "string"
+							},
+							{
+								"internalType": "address",
+								"name": "tokenAddress",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "globalRateBps",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "minLockMonths",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "minLockAmount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "estimateRequiredBankReserve",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "estimateRequiredBankReservePrecise",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "currentMonth",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "monthsCount",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.SummaryInfo",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -1693,14 +1880,6 @@
 		"remappings": []
 	},
 	"sources": {
-		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-			"keccak256": "0x74ed01eb66b923d0d0cfe3be84604ac04b76482a55f9dd655e1ef4d367f95bc2",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://5282825a626cfe924e504274b864a652b0023591fa66f06a067b25b51ba9b303",
-				"dweb:/ipfs/QmeCfPykghhMc81VJTrHTC7sF6CRvaA1FXVq2pJhwYp1dV"
-			]
-		},
 		"@openzeppelin/contracts/utils/ReentrancyGuard.sol": {
 			"keccak256": "0x11a5a79827df29e915a12740caf62fe21ebe27c08c9ae3e09abe9ee3ba3866d3",
 			"license": "MIT",
@@ -1710,11 +1889,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0x9b2ba09c47ea117cecd27e276c026aa6e84299fbd618701399062d138d7ab3dd",
+			"keccak256": "0xace590f45cc29f942d97e3085f8cbbeda5d093e9443568d4de83dd5fc2a8a781",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://13f733ae92628cc1d01846b129d63772e48b08043c91e7273541a904dbdccc0c",
-				"dweb:/ipfs/QmZuBgTvho9Dbov92QTUroeJtdLraRXdC88uANHYskoMv6"
+				"bzz-raw://ef4aa401893a8a77e2b3f04a0b9ee11c7e9a11f1480ab9e9f779e2938ba24905",
+				"dweb:/ipfs/QmZzcNEiVBGt55tiZT3xprwUa7wPxHyVhnJHVpkjf8PUDL"
 			]
 		}
 	},

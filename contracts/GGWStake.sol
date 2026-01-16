@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+interface IERC20 {
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function name() external view returns (string memory);
+    function decimals() external view returns (uint8);
+    function symbol() external view returns (string memory);
+}
 contract GGWStake is ReentrancyGuard {
     address public owner;
     address public oracle;
@@ -64,7 +72,7 @@ contract GGWStake is ReentrancyGuard {
     mapping (uint256 => uint256) public monthDepositsCount;
     mapping (uint256 => uint256) public monthDepositsAmount;
     mapping (uint256 => uint256) public monthRewardsAmount;
-
+    
     // --- Constructor ---
     constructor(address _stakingToken, uint256 _globalRateBps) {
         require(_stakingToken != address(0), "Token: zero");
@@ -179,6 +187,9 @@ contract GGWStake is ReentrancyGuard {
         emit GlobalRateUpdated(_rateBps);
     }
 
+    function getMonthsCount() public view returns (uint256) {
+        return months.length;
+    }
     // --- Admin: Months ---
     function addMonth(uint256 start, uint256 end, uint256 rateBps) external onlyOwner {
         _addSingleMonth(start, end, rateBps);
@@ -371,23 +382,14 @@ contract GGWStake is ReentrancyGuard {
     function cancelDeposit(uint256 depositId) external nonReentrant onlyOwner {
         Deposit storage dep = deposits[depositId];
         require(dep.active, "Deposit inactive");
-
-        // Определяем, кому вернуть токены
-        address recipient;
-        if (byOracle[dep.depositId]) {
-            // Создан ораклом → возвращаем админу
-            recipient = msg.sender;
-        } else {
-            // Создан пользователем → возвращаем владельцу
-            recipient = dep.owner;
-        }
+        require(byOracle[dep.depositId], "Can only cancel oracle deposits");
 
         dep.active = false;
         activeDepositsCount--;
         depositsAmount -= dep.amount;
 
-        require(stakingToken.transfer(recipient, dep.amount), "Transfer failed");
-        emit DepositCancelled(dep.depositId, recipient, dep.amount);
+        require(stakingToken.transfer(msg.sender, dep.amount), "Transfer failed");
+        emit DepositCancelled(dep.depositId, msg.sender, dep.amount);
     }
     function getSavedReward(uint256 depositId) external nonReentrant {
         Deposit storage dep = deposits[depositId];
@@ -479,11 +481,11 @@ contract GGWStake is ReentrancyGuard {
         }
         return months.length;
     }
-    function estimateRequiredBankReserve() external view returns (uint256 estimatedMonthlyRewards) {
+    function estimateRequiredBankReserve() public view returns (uint256 estimatedMonthlyRewards) {
         uint256 maxRateBps = globalRateBps;
         estimatedMonthlyRewards = (depositsAmount * maxRateBps) / 10_000;
     }
-    function estimateRequiredBankReservePrecise() external view returns (uint256) {
+    function estimateRequiredBankReservePrecise() public view returns (uint256) {
         uint256 currentMonth = _getCurrentMonthIndex();
         if (currentMonth >= months.length) {
             return 0;
@@ -585,7 +587,7 @@ contract GGWStake is ReentrancyGuard {
         return reward;
     }
 
-    function _getCurrentMonthIndex() internal view returns (uint256) {
+    function _getCurrentMonthIndex() public view returns (uint256) {
         uint256 ts = block.timestamp;
         for (uint256 i = lastKnownMonthIndex; i < months.length; i++) {
             if (ts >= months[i].start && ts < months[i].end) {
@@ -641,6 +643,77 @@ contract GGWStake is ReentrancyGuard {
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0),"E1");
         owner = newOwner;
+    }
+    struct SummaryInfo {
+        uint256 usersCount;
+        uint256 activeDepositsCount;
+        uint256 depositsCount;
+        uint256 depositsAmount;
+        uint256 rewardsPayed;
+        uint256 bankAmount;
+        uint8 tokenDecimals;
+        string tokenName;
+        string tokenSymbol;
+        address tokenAddress;
+        uint256 globalRateBps;
+        uint256 minLockMonths;
+        uint256 minLockAmount;
+        uint256 estimateRequiredBankReserve;
+        uint256 estimateRequiredBankReservePrecise;
+        uint256 currentMonth;
+        uint256 monthsCount;
+    }
+    function getSummaryInfo() public view returns (SummaryInfo memory) {
+        return SummaryInfo({
+            usersCount: allUsers.length,
+            activeDepositsCount: activeDepositsCount,
+            depositsCount: deposits.length,
+            depositsAmount: depositsAmount,
+            rewardsPayed: rewardsPayed,
+            bankAmount: bankAmount,
+            tokenDecimals: stakingToken.decimals(),
+            tokenName: stakingToken.name(),
+            tokenSymbol: stakingToken.symbol(),
+            tokenAddress: address(stakingToken),
+            globalRateBps: globalRateBps,
+            minLockMonths: minLockMonths,
+            minLockAmount: minLockAmount,
+            estimateRequiredBankReserve: estimateRequiredBankReserve(),
+            estimateRequiredBankReservePrecise: estimateRequiredBankReservePrecise(),
+            currentMonth: _getCurrentMonthIndex(),
+            monthsCount: months.length
+        });
+    }
+    struct MonthSummaryInfo {
+        uint256 monthId;
+        uint256 start;
+        uint256 end;
+        uint256 rateBps;
+        uint256 depositsCount;
+        uint256 depositsAmount;
+        uint256 rewardsAmount;
+    }
+    function getMonths(uint256 _offset, uint256 _limit) external view returns (MonthSummaryInfo[] memory ret) {
+        if (_limit == 0) _limit = months.length;
+        uint256 iEnd = _offset + _limit;
+        if (_offset > months.length) return ret;
+        if (iEnd > months.length) iEnd = months.length;
+
+        ret = new MonthSummaryInfo[](iEnd - _offset);
+        for (uint256 i = 0; i < iEnd - _offset ; i++) {
+            uint256 monthId = months.length - i - _offset - 1;
+            ret[i] = MonthSummaryInfo({
+                monthId: monthId,
+                start: months[monthId].start,
+                end: months[monthId].end,
+                rateBps: months[monthId].rateBps,
+                depositsCount: monthDepositsCount[monthId],
+                depositsAmount: monthDepositsAmount[monthId],
+                rewardsAmount: monthRewardsAmount[monthId]
+            });
+        }
+
+        return ret;
     }
     // --- Emergency ---
     function recoverToken(address token, uint256 amount) external onlyOwner {
