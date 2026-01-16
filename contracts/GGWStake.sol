@@ -433,11 +433,10 @@ contract GGWStake is ReentrancyGuard {
             if (endMonthIdx <= startMonthIdx) return 0;
         }
         if (depositStart == 0) depositStart = block.timestamp;
-        // Определяем, до какого месяца можно начислять (только завершённые)
-        // Но так как это preview — считаем до endMonthIdx (как будто все месяцы завершены)
-        // Однако для consistency с pending-логикой — считаем только завершённые на текущий момент
-        // Но вы, скорее всего, хотите "максимальный прогноз", поэтому:
-        uint256 actualEnd = endMonthIdx; // предполагаем, что все месяцы пройдут
+        // Determine the month up to which we can accrue (only completed ones)
+        // But since this is a preview, we count up to endMonthIdx (as if all months were completed)
+        // However, for consistency with pending logic, we only count those that are currently completed
+        uint256 actualEnd = endMonthIdx; // we assume that all the months will pass
 
         uint256 reward = 0;
 
@@ -449,13 +448,13 @@ contract GGWStake is ReentrancyGuard {
             uint256 monthlyReward = (amount * rateBps) / 10_000;
 
             if (i == startMonthIdx) {
-                // Пропорционально от depositStart до конца месяца
+                // Proportionally from depositStart to the end of the month
                 uint256 monthStart = month.start;
                 uint256 monthEnd = month.end;
                 uint256 monthLength = monthEnd - monthStart;
 
                 uint256 effectiveStart = depositStart > monthStart ? depositStart : monthStart;
-                uint256 effectiveEnd = monthEnd; // предполагаем, что месяц завершится
+                uint256 effectiveEnd = monthEnd; // we assume that the month will end
 
                 if (effectiveStart >= effectiveEnd) {
                     continue;
@@ -466,7 +465,7 @@ contract GGWStake is ReentrancyGuard {
 
                 reward += (monthlyReward * activeSeconds) / monthLength;
             } else {
-                // Полный месяц
+                // Full month
                 reward += monthlyReward;
             }
         }
@@ -501,7 +500,7 @@ contract GGWStake is ReentrancyGuard {
     ) public view returns (uint256) {
         if (amount == 0 || lockMonths == 0) return 0;
 
-        // Найти индекс месяца, в который попадает depositStart
+        // Find the index of the month in which depositStart falls
         if (depositStart == 0) depositStart = block.timestamp;
         uint256 startMonthIdx = _getCurrentMonthIndexAt(depositStart);
         if (startMonthIdx >= months.length) return 0;
@@ -520,9 +519,9 @@ contract GGWStake is ReentrancyGuard {
             uint256 monthlyReward = (amount * rateBps) / 10_000;
 
             if (i == startMonthIdx) {
-                // Первый месяц — частично
+                // First month - partially
                 uint256 effectiveStart = depositStart > month.start ? depositStart : month.start;
-                uint256 effectiveEnd = month.end; // предполагаем, что месяц завершится
+                uint256 effectiveEnd = month.end; // we assume that the month will end
                 if (effectiveStart >= effectiveEnd) continue;
 
                 uint256 activeSeconds = effectiveEnd - effectiveStart;
@@ -531,7 +530,7 @@ contract GGWStake is ReentrancyGuard {
 
                 reward += (monthlyReward * activeSeconds) / monthLength;
             } else {
-                // Полные месяцы
+                // Full months
                 reward += monthlyReward;
             }
         }
@@ -556,30 +555,30 @@ contract GGWStake is ReentrancyGuard {
             uint256 rateBps = (dep.ownRate) ? dep.rate : _getEffectiveRateBps(i);
             uint256 monthlyReward = (amount * rateBps) / 10_000;
 
-            // Особая логика только для первого месяца депозита
+            // Special logic only for the first month of the deposit
             if (i == dep.monthIndex) {
-                // Депозит начался в этом месяце — считаем долю
+                // The deposit started this month - we're counting the share
                 uint256 monthStart = month.start;
                 uint256 monthEnd = month.end;
                 uint256 monthLength = monthEnd - monthStart;
 
-                // Время, с которого депозит "действует" в этом месяце
+                // The time from which the deposit is "active" this month
                 uint256 effectiveStart = dep.depositStart > monthStart ? dep.depositStart : monthStart;
-                // Мы считаем только до конца месяца (он завершён, иначе не вошёл бы в endMonthIdx)
+                // We only count until the end of the month (it is completed, otherwise it would not be included in endMonthIdx)
                 uint256 effectiveEnd = monthEnd;
 
                 if (effectiveStart >= effectiveEnd) {
-                    // Депозит начат после окончания месяца — пропуск (теоретически невозможно)
+                    // Deposit started after the end of the month - skip (theoretically impossible)
                     continue;
                 }
 
                 uint256 activeSeconds = effectiveEnd - effectiveStart;
 
-                // Пропорциональное вознаграждение: (activeSeconds / monthLength) * monthlyReward
-                // Избегаем деления до умножения для точности
+                // Proportional reward: (activeSeconds / monthlyLength) * monthlyReward
+                // Avoid division before multiplication for accuracy
                 reward += (monthlyReward * activeSeconds) / monthLength;
             } else {
-                // Полный месяц — полный процент
+                // Full month - full percentage
                 reward += monthlyReward;
             }
         }
