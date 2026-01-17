@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
 body {
   @apply font-sans leading-normal tracking-normal;
   background-color: #120d28;
@@ -528,4 +531,8 @@ BUTTON.connectWalletButton {
   .ggw_main_menu {
     display: none;
   }
+}
+
+.smooth-scroll {
+  scroll-behavior: smooth;
 }
