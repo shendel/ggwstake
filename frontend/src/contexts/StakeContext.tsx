@@ -5,6 +5,7 @@ import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import fetchSummaryInfo from '@/helpers_stake/fetchSummaryInfo'
 import fetchUserSummary from '@/helpers_stake/fetchUserSummary'
 import fetchMonths from '@/helpers_stake/fetchMonths'
+import fetchUserDeposits from '@/helpers_stake/fetchUserDeposits'
 
 import BigNumber from "bignumber.js"
 
@@ -29,6 +30,12 @@ const StakeContext = createContext({
   isDepositMonthsFetching: true,
   isDepositMonthsFetchingError: false,
   isDepositMonthsLoaded: false,
+  
+  userDeposits: [],
+  isUserDepositsFetching: true,
+  isUserDepositsFetchingError: false,
+  isUserDepositsLoaded: false,
+  updateUserDeposits: () => {},
   
   updateUserState: () => {},
   updateState: () => {},
@@ -100,6 +107,87 @@ export default function StakeProvider(props) {
     }
   }, [ summaryInfo ])
   
+  const [ userDeposits, setUserDeposits ] = useState([])
+  const [ isUserDepositsFetching, setIsUserDepositsFetching ] = useState(true)
+  const [ isUserDepositsFetchingError, setIsUserDepositsFetchingError ] = useState(false)
+  const [ isUserDepositsLoaded, setIsUserDepositsLoaded ] = useState(false)
+  
+  const _doUserDeposits = () => {
+    setIsUserDepositsFetching(true)
+    setIsUserDepositsFetchingError(false)
+    setIsUserDepositsLoaded(false)
+    
+    fetchUserDeposits({
+      address: contractAddress,
+      chainId,
+      user: injectedAccount,
+      offset: 0,
+      limit: userSummaryInfo.depositsCount,
+      onBatch: (batch, offset, total) => {
+        setUserDeposits(prev => {
+          // Создаем копию предыдущего массива
+          let updatedDeposits = [...prev];
+          
+          // Обрабатываем каждый депозит из батча
+          batch.forEach(newDeposit => {
+            // Ищем индекс существующего депозита с таким же depositId
+            const existingIndex = updatedDeposits.findIndex(
+              deposit => deposit.depositId === newDeposit.depositId
+            );
+            
+            if (existingIndex !== -1) {
+              // Если депозит существует - обновляем его данные
+              updatedDeposits[existingIndex] = newDeposit;
+            } else {
+              // Если депозит не существует - добавляем в массив
+              updatedDeposits.push(newDeposit);
+            }
+          });
+          
+          // Сортируем по дате старта
+          return updatedDeposits.sort((a, b) => 
+            Number(a.depositStart) > Number(b.depositStart) ? -1 : 1
+          );
+        });
+      }
+    }).then((userDeposits) => {
+      setIsUserDepositsFetching(false)
+      setIsUserDepositsLoaded(true)
+      // Финальное обновление списка с обновлением/добавлением всех депозитов
+      setUserDeposits(prev => {
+        let updatedDeposits = [...prev];
+        
+        userDeposits.forEach(newDeposit => {
+          const existingIndex = updatedDeposits.findIndex(
+            deposit => deposit.depositId === newDeposit.depositId
+          );
+          
+          if (existingIndex !== -1) {
+            updatedDeposits[existingIndex] = newDeposit;
+          } else {
+            updatedDeposits.push(newDeposit);
+          }
+        });
+        
+        return updatedDeposits.sort((a, b) => 
+          Number(a.depositStart) > Number(b.depositStart) ? -1 : 1
+        );
+      });
+      
+      console.log('>>> user deposits', userDeposits)
+    }).catch((err) => {
+      setIsUserDepositsFetching(false)
+      setIsUserDepositsFetchingError(true)
+    })
+  }
+
+  useEffect(() => {
+    console.log('>> userSummaryInfo updated', userSummaryInfo)
+    if (userSummaryInfo && userSummaryInfo.depositsCount) {
+      _doUserDeposits()
+    }
+  }, [ userSummaryInfo ])
+  
   useEffect(() => {
     if (isNeedUpdate && chainId && contractAddress) {
       setIsNeedUpdate(false)
@@ -150,6 +238,7 @@ export default function StakeProvider(props) {
         setUserSummaryInfo(answer)
         setIsFetchUserSummaryInfo(false)
         setIsUserSummaryInfoLoaded(true)
+        _doUserDeposits()
         console.log('>> user summary', answer)
       }).catch((err) => {
         console.log('>> fail fetch user summary', err)
@@ -190,6 +279,12 @@ export default function StakeProvider(props) {
       isDepositMonthsFetchingError,
       isDepositMonthsLoaded,
 
+      userDeposits,
+      isUserDepositsFetching,
+      isUserDepositsFetchingError,
+      isUserDepositsLoaded,
+      
+      updateUserDeposits: () => { _doUserDeposits() },
       updateUserState: () => { setIsNeedUpdateUserSummary(true) },
       updateState: () => { setIsNeedUpdate(true) },
     }}>

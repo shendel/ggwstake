@@ -5,9 +5,16 @@ import CreateDeposit from './CreateDeposit';
 import DepositCard from './DepositCard';
 import StatCard from './StatCard';
 import RewardsChart from './RewardsChart';
+import UserDeposits from './UserDeposits'
+
+import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import { useStakeContext } from '@/contexts/StakeContext'
 
 export default function StakingDashboard() {
+  const {
+    injectedAccount
+  } = useInjectedWeb3()
+  
   const [account, setAccount] = useState(null);
   const [deposits, setDeposits] = useState([]);
   const [stats, setStats] = useState({
@@ -77,21 +84,11 @@ export default function StakingDashboard() {
             <StakingInfo />
             <CreateDeposit account={account} />
           </div>
-
-          <div>
-            <h2 className="text-xl font-semibold text-white mb-4">Your Deposits</h2>
-            {deposits.length === 0 ? (
-              <div className="bg-white rounded-xl shadow p-6 text-center">
-                <p className="text-gray-500">No active deposits</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {deposits.map(deposit => (
-                  <DepositCard key={deposit.id} deposit={deposit} />
-                ))}
-              </div>
-            )}
-          </div>
+          {injectedAccount ? (
+            <UserDeposits />
+          ) : (
+            <div>Not connected</div>
+          )}
         </div>
       </div>
     </div>
