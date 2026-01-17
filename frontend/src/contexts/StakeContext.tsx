@@ -23,12 +23,14 @@ const StakeContext = createContext({
   userSummaryInfo: false,
   isFetchUserSummaryInfo: true,
   isUserSummaryFetchError: false,
+  isUserSummaryInfoLoaded: false,
 
   depositMonths: [],
   isDepositMonthsFetching: true,
   isDepositMonthsFetchingError: false,
   isDepositMonthsLoaded: false,
   
+  updateUserState: () => {},
   updateState: () => {},
 })
 
@@ -130,11 +132,14 @@ export default function StakeProvider(props) {
   const [ userSummaryInfo, setUserSummaryInfo ] = useState(false)
   const [ isFetchUserSummaryInfo, setIsFetchUserSummaryInfo ] = useState(true)
   const [ isUserSummaryFetchError, setIsUserSummaryFetchError ] = useState(false)
-  
+  const [ isUserSummaryInfoLoaded, setIsUserSummaryInfoLoaded ] = useState(false)
+  const [ isNeedUpdateUserSummary, setIsNeedUpdateUserSummary ] = useState(true)
+
   useEffect(() => {
-    
-    if (injectedAccount && summaryInfo) {
+    if (injectedAccount && summaryInfo && isNeedUpdateUserSummary) {
       setIsFetchUserSummaryInfo(true)
+      setIsNeedUpdateUserSummary(false)
+      setIsUserSummaryInfoLoaded(false)
       setIsUserSummaryFetchError(false)
       fetchUserSummary({
         chainId,
@@ -144,6 +149,7 @@ export default function StakeProvider(props) {
       }).then((answer) => {
         setUserSummaryInfo(answer)
         setIsFetchUserSummaryInfo(false)
+        setIsUserSummaryInfoLoaded(true)
         console.log('>> user summary', answer)
       }).catch((err) => {
         console.log('>> fail fetch user summary', err)
@@ -156,8 +162,12 @@ export default function StakeProvider(props) {
       setIsFetchUserSummaryInfo(false)
       setIsUserSummaryFetchError(false)
     }
-  }, [ injectedAccount, summaryInfo, tokenInfo ])
-  
+  }, [ injectedAccount, summaryInfo, tokenInfo, isNeedUpdateUserSummary ])
+
+  useEffect(() => {
+    setIsNeedUpdateUserSummary(true)
+  }, [ injectedAccount ])
+
   return (
     <StakeContext.Provider value={{
       chainId: chainId,
@@ -173,12 +183,14 @@ export default function StakeProvider(props) {
       userSummaryInfo,
       isFetchUserSummaryInfo,
       isUserSummaryFetchError,
+      isUserSummaryInfoLoaded,
 
       depositMonths,
       isDepositMonthsFetching,
       isDepositMonthsFetchingError,
       isDepositMonthsLoaded,
-      
+
+      updateUserState: () => { setIsNeedUpdateUserSummary(true) },
       updateState: () => { setIsNeedUpdate(true) },
     }}>
       {children}

@@ -33,17 +33,6 @@ const ManageMonths = (props) => {
   const {
     chainId,
     contractAddress,
-  } = useStakeContext()
-
-  const {
-    injectedChainId,
-    injectedWeb3,
-  } = useInjectedWeb3()
-  
-  const { addNotification } = useNotification()
-  const { openModal } = useModal()
-
-  const {
     depositMonths,
     isDepositMonthsFetching,
     summaryInfo,
@@ -54,6 +43,15 @@ const ManageMonths = (props) => {
     isSummaryLoaded,
     updateState,
   } = useStakeContext()
+
+  const {
+    injectedChainId,
+    injectedWeb3,
+  } = useInjectedWeb3()
+  
+  const { addNotification } = useNotification()
+  const { openModal } = useModal()
+
   
   const [months, setMonths] = useState([]);
   const [durationMinutes, setDurationMinutes] = useState(10);

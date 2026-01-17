@@ -1,5 +1,4 @@
 import ContractJson from "@/abi/GGWStake.json"
-import TokenAbi from 'human-standard-token-abi'
 import Web3 from 'web3'
 import { Interface as AbiInterface } from '@ethersproject/abi'
 import { GET_CHAIN_RPC } from '@/web3/chains'
@@ -9,47 +8,46 @@ import { callMulticall } from '@/helpers/callMulticall'
 import Web3ObjectToArray from "@/helpers/Web3ObjectToArray"
 import { fromWei } from '@/helpers/wei'
 
-const fetchUserSummary = (options) => {
+const fetchEstimateReward = (options) => {
   const {
-    contractAddress,
+    address,
     chainId,
-    userAddress,
-    tokenAddress,
-    depositsLimit = 10,
+    amount,
+    lockPeriod,
   } = {
     ...options
   }
+  console.log('>>> fetchEstimateReward', options)
 
   return new Promise((resolve, reject) => {
     const ContractAbi = ContractJson.abi
 
     const multicall = getMultiCall(chainId)
     const abiI = new AbiInterface(ContractAbi)
-    
-    const tokenAbiI = new AbiInterface(TokenAbi)
 
     callMulticall({
       multicall,
-      target: contractAddress,
+      target: address,
       encoder: abiI,
       calls: {
-        depositsCount: { func: 'getUserDepositsCount', args: [ userAddress ] },
-        tokenBalance: { func: 'balanceOf', args: [ userAddress ], target: tokenAddress, encoder: tokenAbiI },
-        tokenAllowance: { func: 'allowance', args: [ userAddress, contractAddress ], target: tokenAddress, encoder: tokenAbiI }
+        amount: { func: 'calculateRewardByMonths', args: [ amount, lockPeriod, 0 ] },
+
       }
-    }).then((mcAnswer) => {
-      
+    }).then((answer) => {
+      const {
+        amount,
+      } = answer
+      console.log('>>> fetchEstimateReward', answer)
       resolve({
         chainId,
-        contractAddress,
-        ...mcAnswer,
+        address,
+        amount,
       })
-
     }).catch((err) => {
-      console.log('>>> Fail fetch user summary', err)
+      console.log('>>> Fail fetch all info', err)
       reject(err)
     })
   })
 }
 
-export default fetchUserSummary
+export default fetchEstimateReward
