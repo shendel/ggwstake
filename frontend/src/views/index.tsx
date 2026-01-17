@@ -9,6 +9,9 @@ import { useEffect, useState } from "react"
 import HashRouterViews from '@/components/HashRouterViews'
 
 import Home from '@/views/Home'
+import Admin from '@/views/Admin'
+import AdminManageMonths from '@/views/AdminManageMonths'
+
 import MarkDownViewer from '@/views/MarkDownViewer'
 
 
@@ -25,6 +28,8 @@ import { TITLE } from '@/config'
 function GGWStakeView(pageProps) {
   const viewsPaths = {
     '/': Home,
+    '/admin': Admin,
+    '/admin/managemonths': AdminManageMonths,
   }
 
   return (

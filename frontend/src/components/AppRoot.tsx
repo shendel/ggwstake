@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Web3Connector from '@/web3/Web3Connector'
 import InjectedWeb3Provider from '@/web3/InjectedWeb3Provider'
 
-import ConfirmationModal from "./ConfirmationModal";
+import ModalProvider from "@/contexts/ModalContext";
 import NotificationProvider from "@/contexts/NotificationContext"
 import MarkDownProvider from '@/contexts/MarkDownContext'
 
@@ -30,9 +30,9 @@ export default function AppRoot(props) {
         <NotificationProvider>
           <Web3Connector chainIds={chainId} autoConnect={true}>
             <InjectedWeb3Provider chainId={chainId} chainIds={[chainId]}>
-              <ConfirmationModal>
+              <ModalProvider>
                 {children}
-              </ConfirmationModal>
+              </ModalProvider>
             </InjectedWeb3Provider>
           </Web3Connector>
         </NotificationProvider>

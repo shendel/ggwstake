@@ -3,18 +3,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { createContext, useContext, useState, useEffect } from "react";
 
 // Создаем контекст для модального окна
-const ConfirmationModalContext = createContext({
+const ModalContext = createContext({
   openModal: () => {},
   closeModal: () => {}
 });
 
 // Хук для доступа к контексту
-export const useConfirmationModal = () => {
-  return useContext(ConfirmationModalContext);
+export const useModal = () => {
+  return useContext(ModalContext);
 };
 
 // Компонент модального окна
-export default function ConfirmationModal({ children }) {
+export default function ModalProvider({ children }) {
   const [modals, setModals] = useState([]); // Массив всех открытых окон
 
   // Функция для открытия модального окна
@@ -71,7 +71,7 @@ export default function ConfirmationModal({ children }) {
   };
   */
   return (
-    <ConfirmationModalContext.Provider value={{ openModal, closeModal }}>
+    <ModalContext.Provider value={{ openModal, closeModal }}>
       {children}
 
       {/* Анимированный показ/скрытие модальных окон */}
@@ -83,6 +83,7 @@ export default function ConfirmationModal({ children }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
+            style={{ zIndex: 2000 }}
             className={`${((modal.fullWidth) ? 'overflow-y-auto' : 'items-center flex')} fixed inset-0 justify-center bg-black bg-opacity-50 z-50`}
           >
             {/* Основной контейнер модального окна */}
@@ -91,6 +92,7 @@ export default function ConfirmationModal({ children }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
+              style={{ top: '5em' }}
               className={`bg-gray-800 rounded-xl shadow-xl p-6 max-w-md mx-auto border border-gray-700 w-full ${(modal.fullWidth) ? 'max-w-4xl m-auto' : 'max-w-md'} relative`}
             >
               {/* Заголовок */}
@@ -159,6 +161,6 @@ export default function ConfirmationModal({ children }) {
           </motion.div>
         ))}
       </AnimatePresence>
-    </ConfirmationModalContext.Provider>
+    </ModalContext.Provider>
   );
 }

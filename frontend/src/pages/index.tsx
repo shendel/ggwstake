@@ -8,10 +8,13 @@ import { useEffect, useState } from "react"
 
 import AppRootWrapper from '@/components/AppRootWrapper'
 import GGWStakeView from '@/views/'
+import StakeProvider from '@/contexts/StakeContext'
 
 import {
   TITLE,
-  SEO_DESC
+  SEO_DESC,
+  MAINNET_CHAIN_ID,
+  MAINNET_CONTRACT
 } from '@/config'
 function MyApp(pageProps) {
 
@@ -23,7 +26,9 @@ function MyApp(pageProps) {
         <meta name="description" content={SEO_DESC} />
       </Head>
       <AppRootWrapper>
-        <GGWStakeView />
+        <StakeProvider chainId={MAINNET_CHAIN_ID} contractAddress={MAINNET_CONTRACT}>
+          <GGWStakeView />
+        </StakeProvider>
       </AppRootWrapper>
     </>
   )

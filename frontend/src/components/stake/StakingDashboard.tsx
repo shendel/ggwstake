@@ -5,6 +5,7 @@ import CreateDeposit from './CreateDeposit';
 import DepositCard from './DepositCard';
 import StatCard from './StatCard';
 import RewardsChart from './RewardsChart';
+import { useStakeContext } from '@/contexts/StakeContext'
 
 export default function StakingDashboard() {
   const [account, setAccount] = useState(null);
@@ -17,6 +18,9 @@ export default function StakingDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
+  const stakeContext = useStakeContext()
+
+  console.log('>> stakeContext', stakeContext)
   useEffect(() => {
     // Имитация загрузки данных из контракта
     setTimeout(() => {
