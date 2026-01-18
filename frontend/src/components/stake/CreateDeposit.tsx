@@ -11,7 +11,7 @@ import fetchEstimateReward from '@/helpers_stake/fetchEstimateReward'
 import approveToken from '@/helpers/approveToken'
 import createDeposit from '@/helpers_stake/createDeposit'
 import DepositSuccess from './DepositSuccess'
-
+import CircleInlineLoader from '@/components/CircleInlineLoader'
 
 export default function CreateDeposit({ account }) {
   const {
@@ -75,6 +75,7 @@ export default function CreateDeposit({ account }) {
           amount: '0x' + new BigNumber(toWei(amount, tokenInfo.decimals)).toString(16),
           lockPeriod: lockMonths
         }).then(({ amount }) => {
+          setIsFetchEstimateReward(false)
           setEstimatedReward(formatAmount(amount))
         }).catch((err) => {
           setIsFetchEstimateReward(false)
@@ -229,8 +230,13 @@ export default function CreateDeposit({ account }) {
 
           {estimatedReward && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-800">
-                Estimated reward: <span className="font-semibold">{estimatedReward} {tokenSymbol()}</span>
+              <p className="text-sm text-green-800 flex items-center">
+                <span className="pr-2" >
+                  Estimated reward: <span className="font-semibold">{estimatedReward} {tokenSymbol()}</span>
+                </span>
+                {isFetchEstimateReward && (
+                  <CircleInlineLoader />
+                )}
               </p>
             </div>
           )}
