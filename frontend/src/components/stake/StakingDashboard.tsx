@@ -7,6 +7,7 @@ import StatCard from './StatCard';
 import RewardsChart from './RewardsChart';
 import UserDeposits from './UserDeposits'
 
+import { formatAmount } from '@/helpers_stake/'
 import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import { useStakeContext } from '@/contexts/StakeContext'
 
@@ -26,7 +27,18 @@ export default function StakingDashboard() {
   const [loading, setLoading] = useState(true);
 
   const stakeContext = useStakeContext()
-
+  const {
+    summaryInfo,
+    summaryInfo: {
+      activeDepositsCount,
+      depositsAmount,
+      usersCount,
+      rewardsPayed
+    },
+    tokenInfo,
+    isSummaryLoaded,
+  } = useStakeContext()
+  
   console.log('>> stakeContext', stakeContext)
   useEffect(() => {
     // Имитация загрузки данных из контракта
@@ -54,24 +66,24 @@ export default function StakingDashboard() {
     }, 800);
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!isSummaryLoaded) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen text-white">
       <div className="max-w-6xl mx-auto">
         {/* Статистика */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Active Deposits" value={stats.totalDeposits} icon="🏦" />
+          <StatCard title="Active Deposits" value={activeDepositsCount} icon="🏦" />
           <StatCard 
             title="Total Locked" 
-            value={`${stats.totalAmount} GGW`} 
+            value={`${formatAmount(depositsAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`} 
             icon="🔒" 
             isCurrency 
           />
-          <StatCard title="Unique Users" value={stats.totalUsers} icon="👥" />
+          <StatCard title="Unique Users" value={usersCount} icon="👥" />
           <StatCard 
             title="Total Rewards Paid" 
-            value={`${stats.rewardsByMonth.reduce((sum, m) => sum + parseFloat(m.reward), 0).toFixed(2)} GGW`} 
+            value={`${formatAmount(rewardsPayed, tokenInfo.decimals)} ${tokenInfo.symbol}`} 
             icon="💰" 
             isCurrency 
           />
