@@ -30,6 +30,7 @@ const StakeContext = createContext({
   isDepositMonthsFetching: true,
   isDepositMonthsFetchingError: false,
   isDepositMonthsLoaded: false,
+  updateMonthsState: () => {},
   
   userDeposits: [],
   isUserDepositsFetching: true,
@@ -82,18 +83,48 @@ export default function StakeProvider(props) {
       limit: summaryInfo.monthsCount,
       onBatch: (batch, offset, total) => {
         setDepositMonths(prev => {
-          const newMonths = [
-            ...prev,
-            ...batch
-          ].sort((a,b) => Number(a.start) > Number(b.start) ? 1 : -1)
-
-          return newMonths
-        })
+          let updatedMonths = [...prev];
+          
+          batch.forEach(newMonth => {
+            const existingIndex = updatedMonths.findIndex(
+              month => month.monthId === newMonth.monthId
+            );
+            
+            if (existingIndex !== -1) {
+              updatedMonths[existingIndex] = newMonth;
+            } else {
+              updatedMonths.push(newMonth);
+            }
+          });
+          
+          return updatedMonths.sort((a, b) => 
+            Number(a.start) > Number(b.start) ? 1 : -1
+          );
+        });
       }
     }).then((months) => {
+      setDepositMonths(prev => {
+        let updatedMonths = [...prev];
+        
+        months.forEach(newMonth => {
+          const existingIndex = updatedMonths.findIndex(
+            month => month.monthId === newMonth.monthId
+          );
+          
+          if (existingIndex !== -1) {
+            updatedMonths[existingIndex] = newMonth;
+          } else {
+            updatedMonths.push(newMonth);
+          }
+        });
+        
+        return updatedMonths.sort((a, b) => 
+          Number(a.start) > Number(b.start) ? 1 : -1
+        );
+      });
+      
       setIsDepositMonthsFetching(false)
       setIsDepositMonthsLoaded(true)
-      setDepositMonths(months)
     }).catch((err) => {
       setIsDepositMonthsFetching(false)
       setIsDepositMonthsFetchingError(true)
@@ -278,6 +309,7 @@ export default function StakeProvider(props) {
       isDepositMonthsFetching,
       isDepositMonthsFetchingError,
       isDepositMonthsLoaded,
+      updateMonthsState: () => { _doFetchMonths() },
 
       userDeposits,
       isUserDepositsFetching,

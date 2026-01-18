@@ -65,7 +65,8 @@ export default function DepositCard(props: DepositCardProps) {
     chainId,
     contractAddress,
     updateUserState,
-    updateUserDeposits
+    updateUserDeposits,
+    updateMonthsState,
   } = useStakeContext()
   const { addNotification } = useNotification()
   const {
@@ -124,6 +125,7 @@ export default function DepositCard(props: DepositCardProps) {
             setIsWithdrawing(false)
             setShowWithdraw(false)
             updateUserDeposits()
+            updateMonthsState()
           },
           onError: () => {}
         }).catch((err) => {
@@ -164,6 +166,7 @@ export default function DepositCard(props: DepositCardProps) {
             setIsWithdrawing(false)
             setShowWithdraw(false)
             updateUserDeposits()
+            updateMonthsState()
             setActiveTab('closed')
           },
           onError: () => {}
@@ -205,6 +208,7 @@ export default function DepositCard(props: DepositCardProps) {
             setShowWithdraw(false)
             setActiveTab('closed')
             updateUserDeposits()
+            updateMonthsState()
           },
           onError: () => {}
         }).catch((err) => {
@@ -230,6 +234,7 @@ export default function DepositCard(props: DepositCardProps) {
         setActiveTab('closed')
         setShowWithdraw(false)
         updateUserDeposits()
+        updateMonthsState()
       },
       onError: () => {}
     }).catch((err) => {
