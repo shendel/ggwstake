@@ -41,6 +41,17 @@ export const formatAmount = (weiAmount: string, decimals: number, numbers: numbe
   if (!weiAmount) return '0.00';
   return new BigNumber(fromWei(weiAmount, decimals)).toFixed(numbers).replace(/\.0*$|(?<=\.\d*)0*$/, "");
 }
+
+export const getPastMonths = (currentMonth, months, limit) => {
+  const currentMonthNum = Number(currentMonth);
+  
+  const pastMonths = months.filter(month => 
+    Number(month.monthId) <= currentMonthNum
+  );
+  pastMonths.sort((a, b) => Number(b.monthId) - Number(a.monthId));
+  return pastMonths.slice(0, limit);
+}
+
 export const bpsToPercent = (bps) => {
   return Number(bps) / 100;
 }
@@ -60,4 +71,5 @@ export default {
   displayToUnix,
   bpsToPercent,
   formatAmount,
+  getPastMonths,
 }

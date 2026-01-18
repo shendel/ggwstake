@@ -8,6 +8,7 @@ import RewardsChart from './RewardsChart';
 import UserDeposits from './UserDeposits'
 
 import { formatAmount } from '@/helpers_stake/'
+import { getPastMonths } from '@/helpers_stake/'
 import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import { useStakeContext } from '@/contexts/StakeContext'
 
@@ -33,8 +34,10 @@ export default function StakingDashboard() {
       activeDepositsCount,
       depositsAmount,
       usersCount,
-      rewardsPayed
+      rewardsPayed,
+      currentMonth,
     },
+    depositMonths,
     tokenInfo,
     isSummaryLoaded,
   } = useStakeContext()
@@ -66,6 +69,17 @@ export default function StakingDashboard() {
     }, 800);
   }, []);
 
+  const [ monthsForChart, setMonthsForChart ] = useState([])
+  
+  useEffect(() => {
+    if (isSummaryLoaded) {
+      const _months = getPastMonths( currentMonth, depositMonths, 6)
+      console.log('>> months for chart', _months)
+      setMonthsForChart(
+        _months
+      )
+    }
+  }, [ depositMonths ])
   if (!isSummaryLoaded) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
@@ -92,7 +106,7 @@ export default function StakingDashboard() {
         {/* График и основной контент */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <RewardsChart rewardsByMonth={stats.rewardsByMonth} />
+            <RewardsChart months={monthsForChart} rewardsByMonth={stats.rewardsByMonth} />
             <StakingInfo />
             <CreateDeposit account={account} />
           </div>
