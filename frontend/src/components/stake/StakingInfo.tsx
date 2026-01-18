@@ -1,6 +1,15 @@
 // @ts-nocheck
+import { useStakeContext } from '@/contexts/StakeContext'
+import { fromWei } from '@/helpers/wei'
+import { formatAmount, bpsToPercent } from '@/helpers_stake'
+
 export default function StakingInfo() {
-  // Данные будут получены из контракта: globalRateBps, minLockAmount, minLockMonths
+  const {
+    summaryInfo,
+    isSummaryLoaded,
+    tokenInfo,
+  } = useStakeContext()
+  
   const globalAPY = "5.0%"; 
   const minAmount = "1.0 GGW";
   const minTerm = "1 month";
@@ -19,7 +28,9 @@ export default function StakingInfo() {
           <div>
             <h3 className="font-medium text-white">Fixed-Term Deposits</h3>
             <p className="text-white text-sm mt-1">
-              Lock your tokens for a fixed period ({minTerm} minimum) to earn interest.
+              <span>{`Lock your tokens for a fixed period `}</span>
+              <span>({(isSummaryLoaded) ? summaryInfo.minLockMonths : '...'} months minimum)</span>
+              <span>{` to earn interest.`}</span>
             </p>
           </div>
         </div>
@@ -33,7 +44,22 @@ export default function StakingInfo() {
           <div>
             <h3 className="font-medium text-white">Predictable Rewards</h3>
             <p className="text-white text-sm mt-1">
-              Earn up to <span className="font-semibold">{globalAPY} APY</span>. 
+              {`Earn up to ~`}
+              <span className="font-semibold">
+                {isSummaryLoaded
+                  ? bpsToPercent(Number(summaryInfo.globalRateBps) * 12)
+                  : '...'
+                }
+                {`% APY by year. `}
+              </span>
+              {`Up to ~`}
+              <span className="font-semibold">
+                {isSummaryLoaded
+                  ? bpsToPercent(summaryInfo.globalRateBps)
+                  : '...'
+                }
+                {`% per month. `}
+              </span>
               Rewards are calculated precisely based on your deposit start time.
             </p>
           </div>
@@ -44,11 +70,21 @@ export default function StakingInfo() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-white">Min. Amount</span>
-              <p className="font-medium">{minAmount}</p>
+              <p className="font-medium">
+                {isSummaryLoaded
+                  ? `${formatAmount(summaryInfo.minLockAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`
+                  : '...'
+                }
+              </p>
             </div>
             <div>
               <span className="text-white">Min. Term</span>
-              <p className="font-medium">{minTerm}</p>
+              <p className="font-medium">
+                {isSummaryLoaded
+                  ? `${summaryInfo.minLockMonths} months`
+                  : '...'
+                }
+              </p>
             </div>
           </div>
         </div>

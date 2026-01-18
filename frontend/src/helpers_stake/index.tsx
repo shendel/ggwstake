@@ -37,6 +37,13 @@ export const formatDate = (utx) => {
   
   return d.getDate() + ' ' + monthsNames[d.getMonth()] + ' ' + d.getFullYear()
 }
+export const formatAmount = (weiAmount: string, decimals: number, numbers: number = 4) => {
+  if (!weiAmount) return '0.00';
+  return new BigNumber(fromWei(weiAmount, decimals)).toFixed(numbers).replace(/\.0*$|(?<=\.\d*)0*$/, "");
+}
+export const bpsToPercent = (bps) => {
+  return Number(bps) / 100;
+}
 
 export const formatMonth = (utx) => {
   const d = new Date(Number(utx) * 1000)
@@ -51,4 +58,6 @@ export default {
   unixToDisplay,
   unixToLocal,
   displayToUnix,
+  bpsToPercent,
+  formatAmount,
 }
