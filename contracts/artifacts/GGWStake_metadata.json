@@ -729,6 +729,25 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "depositsRewardEarned",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
 						"name": "idx",
 						"type": "uint256"
 					},
@@ -1081,6 +1100,37 @@
 							}
 						],
 						"internalType": "struct GGWStake.Deposit[]",
+						"name": "ret",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "depositsIds",
+						"type": "uint256[]"
+					}
+				],
+				"name": "getDepositsRewardEarned",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "depositId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "earned",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct GGWStake.DepositRewardEarned[]",
 						"name": "ret",
 						"type": "tuple[]"
 					}
@@ -1889,11 +1939,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0x44b0a1418105f6c93c015c481e174806d0789d0ee1aa62587b1a9b6033431010",
+			"keccak256": "0x4e5751e865814fa6b202436fd31787e76931b865888e24d761732cefe842bc2d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0e1b150a26b775776c393b0863e95989729a1c017752d13bf1714bb2a154ca94",
-				"dweb:/ipfs/QmUhmPPGFuJnpjeqEwmfT4fBugYHFDtVmevDJKqPXsXXYk"
+				"bzz-raw://27972216bc1dd6b16fe6db508978dc01d1eea0b2aab755e3e046395d2a602457",
+				"dweb:/ipfs/QmYNvvz3mvKghaR84yEG3jeQyPwyYQLVCzS7mtn8e5TA2k"
 			]
 		}
 	},

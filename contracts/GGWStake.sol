@@ -59,6 +59,7 @@ contract GGWStake is ReentrancyGuard {
     mapping(address => uint256[]) public userDeposits; // address → depositIds
     uint256 public lastKnownMonthIndex = 0;
     Deposit[] public deposits;
+    mapping(uint256 => uint256) public depositsRewardEarned;
     mapping(uint256 => bool) public byOracle; // Deposit created via oracle for user
     uint256[] public activeDeposits;
     mapping(uint256 => uint256) public activeDepositsIndex;
@@ -317,6 +318,7 @@ contract GGWStake is ReentrancyGuard {
         dep.lastAccruedMonthIdx = endIdx;
         bankAmount -= reward;
         rewardsPayed += reward;
+        depositsRewardEarned[depositId] += reward;
         monthRewardsAmount[endIdx] += reward;
         require(stakingToken.transfer(msg.sender, reward), "Transfer failed");
         lastKnownMonthIndex = _getCurrentMonthIndex();
@@ -346,6 +348,7 @@ contract GGWStake is ReentrancyGuard {
         activeDepositsCount--;
         bankAmount -= reward;
         rewardsPayed += reward;
+        depositsRewardEarned[depositId] += reward;
         _removeFromActiveDeposits(depositId);
         monthRewardsAmount[currentIdx] += reward;
         require(stakingToken.transfer(msg.sender, total), "Transfer failed");
@@ -401,6 +404,7 @@ contract GGWStake is ReentrancyGuard {
         uint256 reward = dep.savedReward;
         bankAmount -= reward;
         rewardsPayed += reward;
+        depositsRewardEarned[depositId] += reward;
         if (reward > 0) {
             require(stakingToken.transfer(msg.sender, reward), "Transfer failed");
         }
@@ -416,6 +420,19 @@ contract GGWStake is ReentrancyGuard {
         return rate == 0 ? globalRateBps : rate;
     }
 
+    struct DepositRewardEarned {
+        uint256 depositId;
+        uint256 earned;
+    }
+    function getDepositsRewardEarned(uint256[] memory depositsIds) public view returns (DepositRewardEarned[] memory ret) {
+        ret = new DepositRewardEarned[](depositsIds.length);
+        for(uint256 i = 0; i < depositsIds.length; i++) {
+            ret[i] = DepositRewardEarned({
+                depositId: depositsIds[i],
+                earned: depositsRewardEarned[depositsIds[i]]
+            });
+        }
+    }
 
     function calculateReward(
         uint256 amount,

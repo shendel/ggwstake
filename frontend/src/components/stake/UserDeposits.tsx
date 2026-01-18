@@ -38,7 +38,7 @@ const UserDeposits = (props) => {
       case 'all':
         return true;
       case 'unlocked':
-        return Number(deposit.unlockMonthIndex) <= Number(currentMonth);
+        return Number(deposit.unlockMonthIndex) <= Number(currentMonth) && deposit.active;
       case 'withReward':
         return (new BigNumber(deposit.pendingReward).isGreaterThan(0)) || (deposit.isSaved);
       case 'locked':

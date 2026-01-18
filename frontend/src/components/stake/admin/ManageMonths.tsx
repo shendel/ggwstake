@@ -319,7 +319,7 @@ const ManageMonths = (props) => {
         </div>
       </div>
       <InfoField>
-        {`The time is indicated according to UTC. In blockchain in UnixTimeStamp (UTX). LT - Local Time in your time-zone`}
+        {`The time is indicated according to UTC. In blockchain is UnixTimeStamp (UTS). LT - Local Time in your time-zone`}
       </InfoField>
       <div className="space-y-6 relative">
         {controlPanel}
