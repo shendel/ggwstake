@@ -14,9 +14,11 @@ import UserDepositsPagination from './UserDepositsPagination'
 const UserDeposits = (props) => {
   const {
     userDeposits,
+    depositMonths,
     summaryInfo,
     summaryInfo: {
-      currentMonth
+      currentMonth,
+      bankAmount
     },
     isUserDepositsFetching,
     isUserDepositsFetchingError,
@@ -38,7 +40,7 @@ const UserDeposits = (props) => {
       case 'unlocked':
         return Number(deposit.unlockMonthIndex) <= Number(currentMonth);
       case 'withReward':
-        return new BigNumber(deposit.pendingReward).isGreaterThan(0);
+        return (new BigNumber(deposit.pendingReward).isGreaterThan(0)) || (deposit.isSaved);
       case 'locked':
         return Number(deposit.unlockMonthIndex) > Number(currentMonth);
       case 'closed':
@@ -46,7 +48,21 @@ const UserDeposits = (props) => {
       default:
         return true;
     }
-  });
+  }).sort((a,b) => {
+    switch (activeTab) {
+      case 'closed':
+        return (Number(a.depositClosed) > Number(b.depositClosed)) ? -1 : 1
+      case 'withReward':
+        if (!a.active && !b.active) {
+          return (Number(a.depositClosed) > Number(b.depositClosed)) ? -1 : 1
+        } else {
+          if (a.active) return 1
+          if (b.active) return -1
+        }
+      default:
+        return (Number(a.depositStart) > Number(b.depositStart)) ? -1 : 1
+    }
+  })
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
@@ -78,10 +94,13 @@ const UserDeposits = (props) => {
               <DepositCard
                 key={deposit.depositId}
                 deposit={deposit}
+                months={depositMonths}
                 tokenSymbol={summaryInfo.tokenSymbol}
                 tokenDecimals={summaryInfo.tokenDecimals}
                 currentMonth={summaryInfo.currentMonth}
                 globalRateBps={summaryInfo.globalRateBps}
+                bankAmount={summaryInfo.bankAmount}
+                setActiveTab={setActiveTab}
               />
             ))}
           </div>

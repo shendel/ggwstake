@@ -28,6 +28,7 @@ export default function ModalProvider({ children }) {
       onConfirm: options.onConfirm || null,
       onCancel: options.onCancel || null,
       isAlert: options.isAlert || false,
+      alertStyle: options.alertStyle || false,
       content: options.content || null,
       hideBottomButtons: options.hideBottomButtons || false,
       hideCloseButton: options.hideCloseButton || false,
@@ -70,96 +71,102 @@ export default function ModalProvider({ children }) {
     );
   };
   */
+  
+  
   return (
     <ModalContext.Provider value={{ openModal, closeModal }}>
       {children}
 
       {/* Анимированный показ/скрытие модальных окон */}
       <AnimatePresence>
-        {modals.map((modal) => (
-          <motion.div
-            key={modal.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ zIndex: 2000 }}
-            className={`${((modal.fullWidth) ? 'overflow-y-auto' : 'items-center flex')} fixed inset-0 justify-center bg-black bg-opacity-50 z-50`}
-          >
-            {/* Основной контейнер модального окна */}
+        {modals.map((modal) => {
+          const bgClass = (modal.alertStyle) ? `bg-red-50 border-red-200` : `bg-gray-800 border-gray-700`
+          const textClass = (modal.alertStyle) ? `text-red-800`: `text-white`
+          return (
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
+              key={modal.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              style={{ top: '5em' }}
-              className={`bg-gray-800 rounded-xl shadow-xl p-6 max-w-md mx-auto border border-gray-700 w-full ${(modal.fullWidth) ? 'max-w-4xl m-auto' : 'max-w-md'} relative`}
+              style={{ zIndex: 2000 }}
+              className={`${((modal.fullWidth) ? 'overflow-y-auto' : 'items-center flex')} fixed inset-0 justify-center bg-black bg-opacity-50 z-50`}
             >
-              {/* Заголовок */}
-              <h2 className="text-xl font-bold text-white mb-4">{modal.title}</h2>
-              {modal.content == null ? (
-                <div className="text-white text-center mb-6">
-                  {modal.description}
-                </div>
-              ) : (
-                <div>{modal.content}</div>
-              )}
+              {/* Основной контейнер модального окна */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{ top: '5em' }}
+                className={`${bgClass} rounded-xl shadow-xl p-6 max-w-md mx-auto border  w-full ${(modal.fullWidth) ? 'max-w-4xl m-auto' : 'max-w-md'} relative`}
+              >
+                {/* Заголовок */}
+                <h2 className={`text-xl font-bold ${textClass} mb-4`}>{modal.title}</h2>
+                {modal.content == null ? (
+                  <div className={`${textClass} text-center mb-6`}>
+                    {modal.description}
+                  </div>
+                ) : (
+                  <div>{modal.content}</div>
+                )}
 
-              {!modal.hideBottomButtons && (
-                <>
-                  {modal.isAlert ? (
-                    <div className="grid place-items-center">
-                      <button
-                        onClick={() => closeModal(modal.id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                      >
-                        {modal.okTitle || "Ok"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex justify-end gap-4">
-                      <button
-                        onClick={() => closeModal(modal.id, { doCancel: true })}
-                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                      >
-                        {modal.cancelTitle || "Cancel"}
-                      </button>
-                      <button
-                        onClick={() => closeModal(modal.id, { doConfirm: true })}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                      >
-                        {modal.okTitle || "Confirm"}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
+                {!modal.hideBottomButtons && (
+                  <>
+                    {modal.isAlert ? (
+                      <div className="grid place-items-center">
+                        <button
+                          onClick={() => closeModal(modal.id)}
+                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        >
+                          {modal.okTitle || "Ok"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end gap-4">
+                        <button
+                          onClick={() => closeModal(modal.id, { doCancel: true })}
+                          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                          {modal.cancelTitle || "Cancel"}
+                        </button>
+                        <button
+                          onClick={() => closeModal(modal.id, { doConfirm: true })}
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        >
+                          {modal.okTitle || "Confirm"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
 
-              {/* Кнопка закрытия */}
-              {!modal.hideCloseButton && (
-                <button
-                  onClick={() => closeModal(modal.id)}
-                  className="absolute top-2 right-2 focus:outline-none"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 text-gray-500 hover:text-gray-700"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                {/* Кнопка закрытия */}
+                {!modal.hideCloseButton && (
+                  <button
+                    onClick={() => closeModal(modal.id)}
+                    className="absolute top-2 right-2 focus:outline-none"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        ))}
+          )
+        })}
       </AnimatePresence>
     </ModalContext.Provider>
   );
