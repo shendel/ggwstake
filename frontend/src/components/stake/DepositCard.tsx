@@ -72,6 +72,7 @@ export default function DepositCard(props: DepositCardProps) {
     isUserDepositsRewardsLoaded,
     updateUserDepositsRewards
   } = useStakeContext()
+
   const { addNotification } = useNotification()
   const {
     openModal,
@@ -99,7 +100,11 @@ export default function DepositCard(props: DepositCardProps) {
 
   const hasSufficientFunds = (new BigNumber(bankAmount).isGreaterThan(deposit.pendingReward)) ? true : false
   const [ isWithdrawing, setIsWithdrawing ] = useState(false)
-  
+  const [ isWithdrawRewardOnly, setIsWithdrawRewardOnly ] = useState(false)
+  const [ isWithdrawRewardAndClose, setIsWithdrawRewardAndClose ] = useState(false)
+  const [ isWithdrawSafeReward, setIsWithdrawSafeReward ] = useState(false)
+  const [ isSafeDeposit, setIsSafeDeposit ] = useState(false)
+
   const handleWithdrawRewardOnly = () => {
     openModal({
       title: 'Confirm action',
@@ -117,6 +122,7 @@ export default function DepositCard(props: DepositCardProps) {
       onConfirm: () => {
         setTimeout(() => {
           setIsWithdrawing(true)
+          setIsWithdrawRewardOnly(true)
           addNotification('info', `Withdraw reward from deposit #${deposit.depositId}... Confirm transaction`)
           withdrawRewardOnly({
             activeWeb3: injectedWeb3,
@@ -128,6 +134,7 @@ export default function DepositCard(props: DepositCardProps) {
             onSuccess: (txInfo) => {
               addNotification('success', `Reward withdrawed.`)
               setIsWithdrawing(false)
+              setIsWithdrawRewardOnly(false)
               setShowWithdraw(false)
               updateUserDepositsRewards()
               updateUserDeposits()
@@ -137,6 +144,7 @@ export default function DepositCard(props: DepositCardProps) {
           }).catch((err) => {
             addNotification('error', 'Fail withdraw reward')
             setIsWithdrawing(false)
+            setIsWithdrawRewardOnly(false)
           })
         })
       }
@@ -161,6 +169,7 @@ export default function DepositCard(props: DepositCardProps) {
       onConfirm: () => {
         setTimeout(() => {
           setIsWithdrawing(true)
+          setIsWithdrawRewardAndClose(true)
           addNotification('info',
             (noReward)
               ? `Withdraw and close deposit #${deposit.depositId}`
@@ -180,6 +189,7 @@ export default function DepositCard(props: DepositCardProps) {
                   : `Principal + Reward withdrawed. Deposit closed.`
               )
               setIsWithdrawing(false)
+              setIsWithdrawRewardAndClose(false)
               setShowWithdraw(false)
               updateUserDepositsRewards()
               updateUserDeposits()
@@ -190,6 +200,7 @@ export default function DepositCard(props: DepositCardProps) {
           }).catch((err) => {
             addNotification('error', 'Fail withdraw reward')
             setIsWithdrawing(false)
+            setIsWithdrawRewardAndClose(false)
           })
         })
       }
@@ -213,6 +224,7 @@ export default function DepositCard(props: DepositCardProps) {
       onConfirm: () => {
         setTimeout(() => {
           setIsWithdrawing(true)
+          setIsWithdrawSafeReward(true)
           addNotification('info', `Withdraw reward from deposit #${deposit.depositId}... Confirm transaction`)
           withdrawSavedReward({
             activeWeb3: injectedWeb3,
@@ -224,6 +236,7 @@ export default function DepositCard(props: DepositCardProps) {
             onSuccess: (txInfo) => {
               addNotification('success', `Reward withdrawed. Deposit #${deposit.depositId} closed`)
               setIsWithdrawing(false)
+              setIsWithdrawSafeReward(false)
               setShowWithdraw(false)
               setActiveTab('closed')
               updateUserDepositsRewards()
@@ -234,6 +247,7 @@ export default function DepositCard(props: DepositCardProps) {
           }).catch((err) => {
             addNotification('error', 'Fail withdraw reward')
             setIsWithdrawing(false)
+            setIsWithdrawSafeReward(false)
           })
         })
       }
@@ -241,6 +255,7 @@ export default function DepositCard(props: DepositCardProps) {
   }
   const handleSafeDeposit = () => {
     setIsWithdrawing(true)
+    setIsSafeDeposit(true)
     addNotification('info', `Closing deposit #${deposit.depositId}... Confirm transaction`)
     safeDeposit({
       activeWeb3: injectedWeb3,
@@ -252,6 +267,7 @@ export default function DepositCard(props: DepositCardProps) {
       onSuccess: (txInfo) => {
         addNotification('success', `Deposit #${deposit.depositId} closed`)
         setIsWithdrawing(false)
+        setIsSafeDeposit(false)
         setActiveTab('closed')
         setShowWithdraw(false)
         updateUserDeposits()
@@ -261,6 +277,7 @@ export default function DepositCard(props: DepositCardProps) {
     }).catch((err) => {
       addNotification('error', 'Fail close deposit')
       setIsWithdrawing(false)
+      setIsSafeDeposit(false)
     })
   }
   const handleWithdrawButtonClick = () => {
@@ -389,97 +406,91 @@ export default function DepositCard(props: DepositCardProps) {
       {showWithdraw && (
         <div className="border-t p-4 bg-gray-900">
           <h4 className="font-medium text-gray-200 text-center mb-2">Withdraw Options</h4>
-          {hasSufficientFunds ? (
-            <div className="space-y-2">
-              {!deposit.active && deposit.isSaved ? (
-                <button 
-                  className="flex items-center justify-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
-                  onClick={handleWithdrawSafeReward}
-                  disabled={isWithdrawing}
-                >
-                  {isWithdrawing ? (
-                    <>
-                      <CircleInlineLoader />
-                      <span>{`Withdrawing...`}</span>
-                    </>
-                  ) : (
-                    <span>
-                      Withdraw Reward ({formatAmount(deposit.savedReward)} {tokenSymbol})
-                    </span>
-                  )}
-                </button>
-              ) : (
-                <>
-                  {(new BigNumber(deposit.pendingReward).isEqualTo(0) && !isLocked) ? (
-                    <>
-                      <button 
-                        disabled={isLocked || isWithdrawing}
-                        onClick={() => { handleWithdrawRewardAndClose(true) }}
-                        className="flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
-                      >
-                        {isWithdrawing ? (
-                          <>
-                            <CircleInlineLoader />
-                            <span>{`Withdrawing...`}</span>
-                          </>
-                        ) : (
-                          <span>
-                            Close Deposit ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
-                          </span>
-                        )}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="flex items-center justify-center text-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
-                        disabled={isWithdrawing}
-                        onClick={handleWithdrawRewardOnly}
-                      >
-                        {isWithdrawing ? (
-                          <>
-                            <CircleInlineLoader />
-                            <span>{`Withdrawing...`}</span>
-                          </>
-                        ) : (
-                          <span>
-                            Rewards only ({formatAmount(deposit.pendingReward)} {tokenSymbol})
-                          </span>
-                        )}
-                      </button>
-                      <button 
-                        disabled={isLocked || isWithdrawing}
-                        onClick={() => { handleWithdrawRewardAndClose(false) }}
-                        className="flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
-                      >
-                        {isWithdrawing ? (
-                          <>
-                            <CircleInlineLoader />
-                            <span>{`Withdrawing...`}</span>
-                          </>
-                        ) : (
-                          <span>
-                            Principal + Rewards ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
-                          </span>
-                        )}
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
+          <div className="space-y-2">
+            {!deposit.active && deposit.isSaved ? (
               <button 
-                onClick={() => setShowWithdraw(false)}
+                className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
+                onClick={handleWithdrawSafeReward}
                 disabled={isWithdrawing}
-                className="text-center font-bold text-center w-full text-left py-1.5 px-3 bg-red-600 border border-red-900 hover:text-white rounded hover:bg-red-500 text-sm"
               >
-                Cancel
+                {isWithdrawing && isWithdrawSafeReward ? (
+                  <>
+                    <CircleInlineLoader />
+                    <span>{`Withdrawing...`}</span>
+                  </>
+                ) : (
+                  <span>
+                    Withdraw Reward ({formatAmount(deposit.savedReward)} {tokenSymbol})
+                  </span>
+                )}
               </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              Safe 
-            </div>
-          )}
+            ) : (
+              <>
+                {(new BigNumber(deposit.pendingReward).isEqualTo(0) && !isLocked) ? (
+                  <>
+                    <button 
+                      disabled={isLocked || isWithdrawing}
+                      onClick={() => { handleWithdrawRewardAndClose(true) }}
+                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
+                    >
+                      {isWithdrawing && isWithdrawRewardAndClose ? (
+                        <>
+                          <CircleInlineLoader />
+                          <span>{`Withdrawing...`}</span>
+                        </>
+                      ) : (
+                        <span>
+                          Close Deposit ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
+                        </span>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center text-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
+                      disabled={isWithdrawing}
+                      onClick={handleWithdrawRewardOnly}
+                    >
+                      {isWithdrawing && isWithdrawRewardOnly ? (
+                        <>
+                          <CircleInlineLoader />
+                          <span>{`Withdrawing...`}</span>
+                        </>
+                      ) : (
+                        <span>
+                          Rewards only ({formatAmount(deposit.pendingReward)} {tokenSymbol})
+                        </span>
+                      )}
+                    </button>
+                    <button 
+                      disabled={isLocked || isWithdrawing}
+                      onClick={() => { handleWithdrawRewardAndClose(false) }}
+                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
+                    >
+                      {isWithdrawing && isWithdrawRewardAndClose ? (
+                        <>
+                          <CircleInlineLoader />
+                          <span>{`Withdrawing...`}</span>
+                        </>
+                      ) : (
+                        <span>
+                          Principal + Rewards ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
+                        </span>
+                      )}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+            <button 
+              onClick={() => setShowWithdraw(false)}
+              disabled={isWithdrawing}
+              className="disabled:bg-gray-500 disabled:border-gray-900 text-center font-bold text-center w-full text-left py-1.5 px-3 bg-red-600 border border-red-900 hover:text-white rounded hover:bg-red-500 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>

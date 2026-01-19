@@ -10,12 +10,13 @@ import BigNumber from "bignumber.js"
 import fetchEstimateReward from '@/helpers_stake/fetchEstimateReward'
 import approveToken from '@/helpers/approveToken'
 import createDeposit from '@/helpers_stake/createDeposit'
+import SummaryDepositInfo from './SummaryDepositInfo'
 import DepositSuccess from './DepositSuccess'
-import CircleInlineLoader from '@/components/CircleInlineLoader'
+import DotsLoader from '@/components/DotsLoader'
 import { motion } from 'framer-motion';
 
 
-export default function CreateDeposit({ account }) {
+export default function CreateDeposit() {
   const {
     chainId,
     contractAddress,
@@ -31,6 +32,7 @@ export default function CreateDeposit({ account }) {
     tokenInfo,
     userSummaryInfo,
     isUserSummaryInfoLoaded,
+    isSummaryLoaded,
     updateUserState,
     updateState,
   } = useStakeContext()
@@ -39,6 +41,7 @@ export default function CreateDeposit({ account }) {
     injectedChainId,
     injectedWeb3,
     injectedAccount,
+    injectedAccount: account,
   } = useInjectedWeb3()
   
   const { addNotification } = useNotification()
@@ -47,7 +50,8 @@ export default function CreateDeposit({ account }) {
 
   const [amount, setAmount] = useState(``);
   const [lockMonths, setLockMonths] = useState('3');
-  const [estimatedReward, setEstimatedReward] = useState('0.00');
+  const [ estimatedReward, setEstimatedReward ] = useState('0.00');
+  const [ firstEstimatedReward, setFirstEstimatedReward ] = useState('0.00')
 
 
   const setFixedAmount = (amount) => {
@@ -76,9 +80,10 @@ export default function CreateDeposit({ account }) {
           address: contractAddress,
           amount: '0x' + new BigNumber(toWei(amount, tokenInfo.decimals)).toString(16),
           lockPeriod: lockMonths
-        }).then(({ amount }) => {
+        }).then(({ amount, firstReward }) => {
           setIsFetchEstimateReward(false)
           setEstimatedReward(formatAmount(amount))
+          setFirstEstimatedReward(formatAmount(firstReward))
         }).catch((err) => {
           setIsFetchEstimateReward(false)
           console.log('fail fetch estimatedReward', err)
@@ -99,11 +104,19 @@ export default function CreateDeposit({ account }) {
     if (tokenInfo && weiAmount !== undefined) {
       return new BigNumber(fromWei(weiAmount, tokenInfo.decimals)).toFixed(4).replace(/\.0*$|(?<=\.\d*)0*$/, "")
     }
+    console.log('>>> formatAmount dots show', tokenInfo, weiAmount)
     return `...`
   }
   
   const [ isCreateDeposit, setIsCreateDeposit ] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSummary, setShowSummary] = useState(false)
+  const handleShowSummary = () => {
+    setShowSummary(true);
+  };
+  const handleBackToForm = () => {
+    setShowSummary(false);
+  };
   
   const handleCreateDeposit = () => {
     setIsCreateDeposit(true)
@@ -122,6 +135,7 @@ export default function CreateDeposit({ account }) {
         updateUserState()
         updateState()
         setShowSuccess(true)
+        setShowSummary(false)
       },
       onError: () => {}
     }).catch((err) => {
@@ -161,6 +175,33 @@ export default function CreateDeposit({ account }) {
 
   const createDepositClassName = "w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
   
+  if (showSummary) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        <SummaryDepositInfo
+          amount={amount}
+          lockMonths={lockMonths}
+          estimatedReward={estimatedReward}
+          firstEstimatedReward={firstEstimatedReward}
+          tokenSymbol={tokenSymbol()}
+          currentMonth={currentMonth}
+          minLockMonths={minLockMonths}
+          onApprove={handleApprove}
+          onCreate={handleCreateDeposit}
+          onCancel={handleBackToForm}
+          isApproving={isApproving}
+          isNeedApprove={isNeedApprove}
+          isCreating={isCreateDeposit}
+        />
+      </motion.div>
+    );
+  }
+  
   if (showSuccess) {
     return (
       <motion.div
@@ -189,15 +230,26 @@ export default function CreateDeposit({ account }) {
             <div className="flex justify-between items-center">
               <label className="block text-sm font-medium text-gray-500 mb-1">
                 {`Amount `}
-                {`(Min ${formatAmount(minLockAmount)} ${tokenSymbol()})`}
+                {isSummaryLoaded
+                  ? `(Min ${formatAmount(minLockAmount)} ${tokenSymbol()})`
+                  : <>
+                      {`(Min`}
+                      <DotsLoader />
+                      {`)`}
+                    </>
+                }
               </label>
               <div className="flex items-center">
                 <label className="block text-sm font-medium text-gray-500 mb-1">
                   {`Balance: `}
-                  {(isUserSummaryInfoLoaded) ? formatAmount(userSummaryInfo.tokenBalance) : '...'}
-                  {` `}{tokenSymbol()}
+                  {(isUserSummaryInfoLoaded && isSummaryLoaded)
+                    ? `${formatAmount(userSummaryInfo.tokenBalance)} ${tokenSymbol()}`
+                    : <DotsLoader />
+                  }
                 </label>
-                <a onClick={handleSetMaxAmount} className="block text-sm font-medium text-blue-500 cursor-pointer underline mb-1 ml-2">Max</a>
+                {isUserSummaryInfoLoaded && isSummaryLoaded && (
+                  <a onClick={handleSetMaxAmount} className="block text-sm font-medium text-blue-500 cursor-pointer underline mb-1 ml-2">Max</a>
+                )}
               </div>
             </div>
             <div className="relative">
@@ -239,12 +291,14 @@ export default function CreateDeposit({ account }) {
           {estimatedReward && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <p className="text-sm text-green-800 flex items-center">
-                <span className="pr-2" >
-                  Estimated reward: <span className="font-semibold">{estimatedReward} {tokenSymbol()}</span>
+                <span className="pr-2">
+                  {`Estimated reward: `}
+                  {(!isFetchEstimateReward && isSummaryLoaded) ? (
+                    <span className="font-semibold">{estimatedReward} {tokenSymbol()}</span>
+                  ) : (
+                    <DotsLoader color="black" />
+                  )}
                 </span>
-                {isFetchEstimateReward && (
-                  <CircleInlineLoader />
-                )}
               </p>
             </div>
           )}
@@ -252,27 +306,13 @@ export default function CreateDeposit({ account }) {
             <SwitchChainButton className={createDepositClassName} title={`For create Deposit, switch chain to {CHAIN_TITLE}`} />
           ) : (
             <>
-              {isNeedApprove ? (
-                <>
-                  <button
-                    disabled={isApproving}
-                    onClick={handleApprove}
-                    className={createDepositClassName}
-                  >
-                    {isApproving ? `Approving ${tokenSymbol()}` : `Approve ${tokenSymbol()}`}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    disabled={!account || !amount || (parseFloat(amount) < 1) || isCreateDeposit}
-                    onClick={handleCreateDeposit}
-                    className={createDepositClassName}
-                  >
-                    {isCreateDeposit ? `Creating new Deposit` : `Confirm Deposit`}
-                  </button>
-                </>
-              )}
+              <button
+                disabled={!account || !amount || (parseFloat(amount) < 1) || isCreateDeposit}
+                onClick={handleShowSummary} // Изменено с handleCreateDeposit на handleShowSummary
+                className={createDepositClassName}
+              >
+                {`Review & Create`}
+              </button>
             </>
           )}
         </div>

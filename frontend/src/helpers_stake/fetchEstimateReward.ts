@@ -31,17 +31,19 @@ const fetchEstimateReward = (options) => {
       encoder: abiI,
       calls: {
         amount: { func: 'calculateRewardByMonths', args: [ amount, lockPeriod, 0 ] },
-
+        firstReward: { func: 'calculateRewardByMonths', args: [ amount, 1, 0 ] },
       }
     }).then((answer) => {
       const {
         amount,
+        firstReward,
       } = answer
       console.log('>>> fetchEstimateReward', answer)
       resolve({
         chainId,
         address,
         amount,
+        firstReward,
       })
     }).catch((err) => {
       console.log('>>> Fail fetch all info', err)

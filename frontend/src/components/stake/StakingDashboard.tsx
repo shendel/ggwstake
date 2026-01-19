@@ -7,7 +7,7 @@ import StatCard from './StatCard';
 import RewardsChart from './RewardsChart';
 import UserDeposits from './UserDeposits'
 import DotsLoader from '@/components/DotsLoader'
-
+import { AnimatePresence } from 'framer-motion'
 import { formatAmount } from '@/helpers_stake/'
 import { getPastMonths } from '@/helpers_stake/'
 import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
@@ -128,7 +128,7 @@ export default function StakingDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <StakingInfo />
-            <CreateDeposit account={account} />
+            <CreateDeposit />
             <RewardsChart months={monthsForChart} rewardsByMonth={stats.rewardsByMonth} />
           </div>
           {injectedAccount ? (
