@@ -6,6 +6,7 @@ import DepositCard from './DepositCard';
 import StatCard from './StatCard';
 import RewardsChart from './RewardsChart';
 import UserDeposits from './UserDeposits'
+import DotsLoader from '@/components/DotsLoader'
 
 import { formatAmount } from '@/helpers_stake/'
 import { getPastMonths } from '@/helpers_stake/'
@@ -80,24 +81,44 @@ export default function StakingDashboard() {
       )
     }
   }, [ depositMonths ])
-  if (!isSummaryLoaded) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  //if (!isSummaryLoaded) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen text-white">
       <div className="max-w-6xl mx-auto">
         {/* Статистика */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Active Deposits" value={activeDepositsCount} icon="🏦" />
+          <StatCard
+            title="Active Deposits"
+            value={(isSummaryLoaded
+              ? activeDepositsCount
+              : <DotsLoader />
+            )}
+            icon="🏦"
+          />
           <StatCard 
             title="Total Locked" 
-            value={`${formatAmount(depositsAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`} 
+            value={(isSummaryLoaded
+              ? `${formatAmount(depositsAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`
+              : <DotsLoader color="green" />
+            )}
             icon="🔒" 
             isCurrency 
           />
-          <StatCard title="Unique Users" value={usersCount} icon="👥" />
+          <StatCard
+            title="Unique Users"
+            value={(isSummaryLoaded
+              ? usersCount
+              : <DotsLoader />
+            )}
+            icon="👥"
+          />
           <StatCard 
             title="Total Rewards Paid" 
-            value={`${formatAmount(rewardsPayed, tokenInfo.decimals)} ${tokenInfo.symbol}`} 
+            value={(isSummaryLoaded
+              ? `${formatAmount(rewardsPayed, tokenInfo.decimals)} ${tokenInfo.symbol}`
+              : <DotsLoader color="green" />
+            )}
             icon="💰" 
             isCurrency 
           />
@@ -106,9 +127,9 @@ export default function StakingDashboard() {
         {/* График и основной контент */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <RewardsChart months={monthsForChart} rewardsByMonth={stats.rewardsByMonth} />
             <StakingInfo />
             <CreateDeposit account={account} />
+            <RewardsChart months={monthsForChart} rewardsByMonth={stats.rewardsByMonth} />
           </div>
           {injectedAccount ? (
             <UserDeposits />

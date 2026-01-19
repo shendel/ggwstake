@@ -1,18 +1,17 @@
-// Pagination.tsx
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface UserDepositsPaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  containerRef?: React.RefObject<HTMLDivElement>;
+  containerRef?: React.RefObject<HTMLElement>; // Уточнили тип рефа
 }
 
-const UserDepositsPagination: React.FC<UserDepositsPaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  containerRef 
+const UserDepositsPagination: React.FC<UserDepositsPaginationProps> = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  containerRef
 }) => {
   const goToPreviousPage = () => {
     if (currentPage > 1) {
@@ -26,29 +25,76 @@ const UserDepositsPagination: React.FC<UserDepositsPaginationProps> = ({
     }
   };
 
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+
   // Прокрутка к началу списка при смене страницы
   useEffect(() => {
-    const smoothScroll = () => {
-      if (containerRef?.current) {
-        // Используем scrollIntoView с плавной анимацией
-        containerRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      } else {
-        // Если нет ссылки на контейнер, прокручиваем к началу страницы
-        window.scrollTo({ 
-          top: 0, 
-          behavior: 'smooth' 
-        });
-      }
-    };
+    if (!isFirstLoad) {
+      const smoothScrollToTop = () => {
+        let start: number | null = null;
+        const duration = 300; // Продолжительность анимации в миллисекундах
+        
+        // Определяем начальную позицию прокрутки
+        const startPosition = window.pageYOffset || document.documentElement.scrollTop;
 
-    // Запускаем прокрутку с небольшой задержкой для гарантии рендера
-    const timer = setTimeout(smoothScroll, 100);
-    return () => clearTimeout(timer);
-  }, [currentPage]);
+        const animateScroll = (timestamp: number) => {
+          if (!start) start = timestamp;
+          const progress = timestamp - start;
+          const progressRatio = Math.min(progress / duration, 1);
+
+          // Используем ease-out функцию для плавности
+          const easeOutQuad = 1 - Math.pow(1 - progressRatio, 2);
+          
+          // Вычисляем новую позицию прокрутки
+          const currentPosition = startPosition + (0 - startPosition) * easeOutQuad;
+          
+          window.scrollTo(0, currentPosition);
+
+          if (progress < duration) {
+            requestAnimationFrame(animateScroll);
+          } else {
+            // Убедимся, что точно докрутили до 0
+            window.scrollTo(0, 0);
+          }
+        };
+
+        requestAnimationFrame(animateScroll);
+      };
+
+      // Если есть реф на контейнер, скроллим к нему, иначе к верху страницы
+      if (containerRef?.current) {
+        const elementRect = containerRef.current.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
+        const offsetPosition = absoluteElementTop - 100; // 100px отступ сверху
+
+        let start: number | null = null;
+        const duration = 300;
+        const startPosition = window.pageYOffset || document.documentElement.scrollTop;
+
+        const animateScrollToElement = (timestamp: number) => {
+          if (!start) start = timestamp;
+          const progress = timestamp - start;
+          const progressRatio = Math.min(progress / duration, 1);
+          const easeOutQuad = 1 - Math.pow(1 - progressRatio, 2);
+          
+          const currentPosition = startPosition + (offsetPosition - startPosition) * easeOutQuad;
+          window.scrollTo(0, currentPosition);
+
+          if (progress < duration) {
+            requestAnimationFrame(animateScrollToElement);
+          } else {
+            window.scrollTo(0, offsetPosition);
+          }
+        };
+
+        requestAnimationFrame(animateScrollToElement);
+      } else {
+        smoothScrollToTop();
+      }
+    } else {
+      setIsFirstLoad(false);
+    }
+  }, [currentPage, containerRef]); // Добавили containerRef в зависимости
 
   if (totalPages <= 1) {
     return null; // Не показываем пагинацию, если всего одна страница

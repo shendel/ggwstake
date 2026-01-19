@@ -12,6 +12,8 @@ import approveToken from '@/helpers/approveToken'
 import createDeposit from '@/helpers_stake/createDeposit'
 import DepositSuccess from './DepositSuccess'
 import CircleInlineLoader from '@/components/CircleInlineLoader'
+import { motion } from 'framer-motion';
+
 
 export default function CreateDeposit({ account }) {
   const {
@@ -141,15 +143,14 @@ export default function CreateDeposit({ account }) {
       onTrx: (txHash) => {
         addNotification('info', 'Approving transaction', getTransactionLink(chainId, txHash), getShortTxHash(txHash))
       },
-      onSuccess: () => {
-        addNotification('success', `Token ${tokenSymbol()} successfull approved`)
-        setIsApproving(false)
-        updateUserState()
-      },
       onError: () => {
         addNotification('error', 'Fail approving')
         setIsApproving(false)
       }
+    }).then((res) => {
+      addNotification('success', `Token ${tokenSymbol()} successfull approved`)
+      setIsApproving(false)
+      updateUserState()
     }).catch((err) => {})
   }
   const isNeedApprove = (
@@ -162,13 +163,20 @@ export default function CreateDeposit({ account }) {
   
   if (showSuccess) {
     return (
-      <DepositSuccess
-        amount={amount}
-        lockMonths={lockMonths}
-        estimatedReward={estimatedReward}
-        tokenSymbol={tokenSymbol()}
-        onOk={() => setShowSuccess(false)}
-      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        <DepositSuccess
+          amount={amount}
+          lockMonths={lockMonths}
+          estimatedReward={estimatedReward}
+          tokenSymbol={tokenSymbol()}
+          onOk={() => setShowSuccess(false)}
+        />
+      </motion.div>
     )
   }
   return (

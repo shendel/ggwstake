@@ -9,6 +9,8 @@ import BigNumber from "bignumber.js"
 import DepositCard from './DepositCard'
 import DepositTabs from './DepositTabs'
 import UserDepositsPagination from './UserDepositsPagination'
+import DotsLoader from '@/components/DotsLoader'
+import { motion, AnimatePresence } from 'framer-motion'
 
 
 const UserDeposits = (props) => {
@@ -71,10 +73,29 @@ const UserDeposits = (props) => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedDeposits = filteredDeposits.slice(startIndex, endIndex);
   const totalPages = Math.ceil(filteredDeposits.length / itemsPerPage);
-
+  const [ isFirstLoad , setIsFirstLoad ] = useState(true)
   useEffect(() => {
-    setCurrentPage(1)
+    if (!isFirstLoad) {
+      setCurrentPage(1)
+    } else {
+      setIsFirstLoad(false)
+    }
   }, [ activeTab ])
+
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    })
+  };
+
 
   return (
     <div>
@@ -86,24 +107,43 @@ const UserDeposits = (props) => {
         />
         {filteredDeposits.length === 0 ? (
           <div className="bg-gray-800 shadow-lg border border-gray-700 rounded-xl p-4 text-center">
-            <p className="text-gray-500">No deposits</p>
+            {(!isUserDepositsLoaded) ? (
+              <DotsLoader size="lg" />
+            ) : (
+              <p className="text-gray-500">No deposits</p>
+            )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {paginatedDeposits.map(deposit => (
-              <DepositCard
-                key={deposit.depositId}
-                deposit={deposit}
-                months={depositMonths}
-                tokenSymbol={summaryInfo.tokenSymbol}
-                tokenDecimals={summaryInfo.tokenDecimals}
-                currentMonth={summaryInfo.currentMonth}
-                globalRateBps={summaryInfo.globalRateBps}
-                bankAmount={summaryInfo.bankAmount}
-                setActiveTab={setActiveTab}
-              />
-            ))}
-          </div>
+          <AnimatePresence>
+            <motion.div 
+              initial="hidden" 
+              animate="visible"
+              className="space-y-4"
+            >
+              {paginatedDeposits.map((deposit, index) => (
+                <motion.div
+                  key={deposit.depositId}
+                  variants={cardVariants}
+                  custom={index}
+                  initial="hidden"
+                  animate="visible"
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <DepositCard
+                    deposit={deposit}
+                    months={depositMonths}
+                    tokenSymbol={summaryInfo.tokenSymbol}
+                    tokenDecimals={summaryInfo.tokenDecimals}
+                    currentMonth={summaryInfo.currentMonth}
+                    globalRateBps={summaryInfo.globalRateBps}
+                    bankAmount={summaryInfo.bankAmount}
+                    setActiveTab={setActiveTab}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
       <UserDepositsPagination 

@@ -2,17 +2,16 @@
 import { useStakeContext } from '@/contexts/StakeContext'
 import { fromWei } from '@/helpers/wei'
 import { formatAmount, bpsToPercent } from '@/helpers_stake'
+import LoadingIndicator from '@/components/LoadingIndicator'
+import DotsLoader from '@/components/DotsLoader'
 
 export default function StakingInfo() {
   const {
     summaryInfo,
     isSummaryLoaded,
+    isFetchingSummary,
     tokenInfo,
   } = useStakeContext()
-  
-  const globalAPY = "5.0%"; 
-  const minAmount = "1.0 GGW";
-  const minTerm = "1 month";
 
   return (
     <div className="bg-gray-800 shadow-lg border border-gray-700 rounded-xl p-4">
@@ -44,27 +43,28 @@ export default function StakingInfo() {
           <div>
             <h3 className="font-medium text-white">Predictable Rewards</h3>
             <p className="text-white text-sm mt-1">
-              {`Earn up to ~`}
+              {`Earn up to`}
               <span className="font-semibold">
                 {isSummaryLoaded
-                  ? bpsToPercent(Number(summaryInfo.globalRateBps) * 12)
-                  : '...'
+                  ? ` ~${bpsToPercent(Number(summaryInfo.globalRateBps) * 12)}% `
+                  : (
+                    <DotsLoader />
+                  )
                 }
-                {`% APY by year. `}
+                {`APY by year. `}
               </span>
-              {`Up to ~`}
+              {`Up to`}
               <span className="font-semibold">
                 {isSummaryLoaded
-                  ? bpsToPercent(summaryInfo.globalRateBps)
-                  : '...'
+                  ? ` ~${bpsToPercent(summaryInfo.globalRateBps)}% `
+                  : <DotsLoader />
                 }
-                {`% per month. `}
+                {`per month. `}
               </span>
               Rewards are calculated precisely based on your deposit start time.
             </p>
           </div>
         </div>
-
         <div className="border-t pt-4">
           <h3 className="font-medium text-white mb-2">Current Terms</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -73,7 +73,7 @@ export default function StakingInfo() {
               <p className="font-medium">
                 {isSummaryLoaded
                   ? `${formatAmount(summaryInfo.minLockAmount, tokenInfo.decimals)} ${tokenInfo.symbol}`
-                  : '...'
+                  : <DotsLoader />
                 }
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function StakingInfo() {
               <p className="font-medium">
                 {isSummaryLoaded
                   ? `${summaryInfo.minLockMonths} months`
-                  : '...'
+                  : <DotsLoader />
                 }
               </p>
             </div>
