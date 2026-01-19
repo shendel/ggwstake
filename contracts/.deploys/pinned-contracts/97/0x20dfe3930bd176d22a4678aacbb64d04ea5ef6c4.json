@@ -1,6 +1,6 @@
 {
   "name": "GGWStake",
-  "address": "0x3a5f1f772209c597425e2de0987d77b6c0a7e2b2",
+  "address": "0x20dfe3930bd176d22a4678aacbb64d04ea5ef6c4",
   "abi": [
     {
       "inputs": [
@@ -899,6 +899,25 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositsRewardEarned",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "estimateRequiredBankReserve",
       "outputs": [
@@ -1226,6 +1245,37 @@
             }
           ],
           "internalType": "struct GGWStake.Deposit[]",
+          "name": "ret",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "depositsIds",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "getDepositsRewardEarned",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "depositId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "earned",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct GGWStake.DepositRewardEarned[]",
           "name": "ret",
           "type": "tuple[]"
         }
@@ -1844,5 +1894,5 @@
     }
   ],
   "filePath": "electron/GGWStake.sol",
-  "pinnedAt": 1768573572889
+  "pinnedAt": 1768797970624
 }

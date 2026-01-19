@@ -6,7 +6,7 @@ import fetchSummaryInfo from '@/helpers_stake/fetchSummaryInfo'
 import fetchUserSummary from '@/helpers_stake/fetchUserSummary'
 import fetchMonths from '@/helpers_stake/fetchMonths'
 import fetchUserDeposits from '@/helpers_stake/fetchUserDeposits'
-
+import fetchDepositsRewardEarned from '@/helpers_stake/fetchDepositsRewardEarned'
 import BigNumber from "bignumber.js"
 
 
@@ -37,7 +37,13 @@ const StakeContext = createContext({
   isUserDepositsFetchingError: false,
   isUserDepositsLoaded: false,
   updateUserDeposits: () => {},
-  
+
+  userDepositsRewards: {},
+  isUserDepositsRewardsFetching: false,
+  isUserDepositsRewardsFetchingError: false,
+  isUserDepositsRewardsLoaded: false,
+  updateUserDepositsRewards: () => {},
+
   updateUserState: () => {},
   updateState: () => {},
 })
@@ -218,7 +224,73 @@ export default function StakeProvider(props) {
       _doUserDeposits()
     }
   }, [ userSummaryInfo ])
-  
+
+  const [userDepositsRewards, setUserDepositsRewards] = useState({}); // { depositId: weiReward }
+  const [isUserDepositsRewardsFetching, setIsUserDepositsRewardsFetching] = useState(false);
+  const [isUserDepositsRewardsFetchingError, setIsUserDepositsRewardsFetchingError] = useState(false);
+  const [isUserDepositsRewardsLoaded, setIsUserDepositsRewardsLoaded] = useState(false);
+
+  const _doUserDepositsRewards = () => {
+    setIsUserDepositsRewardsFetching(true);
+    setIsUserDepositsRewardsFetchingError(false);
+    setIsUserDepositsRewardsLoaded(false);
+
+    // Получаем все ID депозитов пользователя
+    const depositIds = userDeposits.map(deposit => deposit.depositId);
+
+    if (depositIds.length === 0) {
+      // Если нет депозитов, просто завершаем
+      setIsUserDepositsRewardsFetching(false);
+      setIsUserDepositsRewardsLoaded(true);
+      setUserDepositsRewards({});
+      return;
+    }
+
+    fetchDepositsRewardEarned({
+      address: contractAddress,
+      chainId,
+      depositsIds: depositIds,
+      onBatch: (batch, offset, total) => {
+        // Обновляем награды для каждого депозита из батча
+        setUserDepositsRewards(prev => {
+          const updatedRewards = { ...prev };
+          
+          batch.forEach(rewardInfo => {
+            updatedRewards[rewardInfo.depositId] = rewardInfo.earned;
+          });
+          
+          return updatedRewards;
+        });
+      }
+    }).then((rewardsData) => {
+      // Финальное обновление всех наград
+      const finalRewards = {};
+      rewardsData.forEach(rewardInfo => {
+        finalRewards[rewardInfo.depositId] = rewardInfo.earned;
+      });
+      
+      setUserDepositsRewards(finalRewards);
+      setIsUserDepositsRewardsFetching(false);
+      setIsUserDepositsRewardsLoaded(true);
+      
+      console.log('>>> user deposits rewards', finalRewards);
+    }).catch((err) => {
+      console.error('>>> Fail fetch user deposits rewards', err);
+      setIsUserDepositsRewardsFetching(false);
+      setIsUserDepositsRewardsFetchingError(true);
+    });
+  };
+
+  useEffect(() => {
+    if (isUserDepositsLoaded && userDeposits.length > 0) {
+      _doUserDepositsRewards();
+    } else if (isUserDepositsLoaded && userDeposits.length === 0) {
+      // Если депозитов нет, сбрасываем награды
+      setUserDepositsRewards({});
+      setIsUserDepositsRewardsLoaded(true);
+    }
+  }, [isUserDepositsLoaded, userDeposits]);
+
   useEffect(() => {
     if (isNeedUpdate && chainId && contractAddress) {
       setIsNeedUpdate(false)
@@ -315,8 +387,14 @@ export default function StakeProvider(props) {
       isUserDepositsFetching,
       isUserDepositsFetchingError,
       isUserDepositsLoaded,
-      
       updateUserDeposits: () => { _doUserDeposits() },
+
+      userDepositsRewards,
+      isUserDepositsRewardsFetching,
+      isUserDepositsRewardsFetchingError,
+      isUserDepositsRewardsLoaded,
+      updateUserDepositsRewards: () => { _doUserDepositsRewards() },
+
       updateUserState: () => { setIsNeedUpdateUserSummary(true) },
       updateState: () => { setIsNeedUpdate(true) },
     }}>
