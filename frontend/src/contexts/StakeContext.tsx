@@ -63,7 +63,8 @@ export default function StakeProvider(props) {
     isConnected,
     injectedAccount
   } = useInjectedWeb3()
-
+  
+  const [ activeAccount, setActiveAccount ] = useState(injectedAccount)
   const [ summaryInfo, setSummaryInfo ] = useState(false)
   const [ isFetchingSummary, setIsFetchingSummary ] = useState(true)
   const [ isSummaryFetchError, setIsSummaryFetchError ] = useState(false)
@@ -76,7 +77,7 @@ export default function StakeProvider(props) {
   const [ isDepositMonthsLoaded, setIsDepositMonthsLoaded ] = useState(false)
   
   const [ isNeedUpdate, setIsNeedUpdate ] = useState(true)
-  
+
   const _doFetchMonths = () => {
     setIsDepositMonthsFetching(true)
     setIsDepositMonthsFetchingError(false)
@@ -357,6 +358,11 @@ export default function StakeProvider(props) {
   }, [ injectedAccount, summaryInfo, tokenInfo, isNeedUpdateUserSummary ])
 
   useEffect(() => {
+    if (injectedAccount != activeAccount) {
+      setActiveAccount(injectedAccount)
+      setUserDeposits([])
+      setUserSummaryInfo(false)
+    }
     setIsNeedUpdateUserSummary(true)
   }, [ injectedAccount ])
 
