@@ -7,6 +7,7 @@ import fetchUserSummary from '@/helpers_stake/fetchUserSummary'
 import fetchMonths from '@/helpers_stake/fetchMonths'
 import fetchUserDeposits from '@/helpers_stake/fetchUserDeposits'
 import fetchDepositsRewardEarned from '@/helpers_stake/fetchDepositsRewardEarned'
+import fetchActiveDeposits from '@/helpers_stake/fetchActiveDeposits'
 import BigNumber from "bignumber.js"
 
 
@@ -43,6 +44,13 @@ const StakeContext = createContext({
   isUserDepositsRewardsFetchingError: false,
   isUserDepositsRewardsLoaded: false,
   updateUserDepositsRewards: () => {},
+
+  activeDeposits: [],
+  isActiveDepositsFetching: false,
+  isActiveDepositsFetchingError: false,
+  isActiveDepositsLoaded: false,
+  activeDepositsPendingReward: new BigNumber(0),
+  updateActiveDeposits: () => {},
 
   updateUserState: () => {},
   updateState: () => {},
@@ -225,7 +233,87 @@ export default function StakeProvider(props) {
       _doUserDeposits()
     }
   }, [ userSummaryInfo ])
+  /* ======================= */
+  const [ activeDeposits, setActiveDeposits ] = useState([])
+  const [ isActiveDepositsFetching, setIsActiveDepositsFetching ] = useState(false)
+  const [ isActiveDepositsFetchingError, setIsActiveDepositsFetchingError ] = useState(false)
+  const [ isActiveDepositsLoaded, setIsActiveDepositsLoaded ] = useState(false)
+  const [ activeDepositsPendingReward, setActiveDepositsPendingReward ] = useState(new BigNumber(0))
 
+  const _doFetchActiveDeposits = () => {
+    setIsActiveDepositsFetching(true)
+    setIsActiveDepositsFetchingError(false)
+    setIsActiveDepositsLoaded(false)
+    setActiveDepositsPendingReward(new BigNumber(0))
+
+    fetchActiveDeposits({
+      address: contractAddress,
+      chainId,
+      offset: 0,
+      batchSize: 50,
+      limit: summaryInfo.activeDepositsCount,
+      onBatch: (batch, offset, total) => {
+        setActiveDeposits(prev => {
+          let updatedDeposits = [...prev];
+          batch.forEach(newDeposit => {
+            const existingIndex = updatedDeposits.findIndex(
+              deposit => deposit.depositId === newDeposit.depositId
+            );
+            
+            if (existingIndex !== -1) {
+              updatedDeposits[existingIndex] = newDeposit;
+            } else {
+              
+              updatedDeposits.push(newDeposit);
+            }
+          });
+          
+          return updatedDeposits.sort((a, b) => 
+            Number(a.depositStart) > Number(b.depositStart) ? -1 : 1
+          );
+        });
+        setActiveDepositsPendingReward(prevReward => {
+          let newReward = new BigNumber(prevReward);
+          batch.forEach(deposit => {
+            newReward = newReward.plus(deposit.pendingReward);
+          });
+          return newReward;
+        });
+        
+      }
+    }).then((activeDeposits) => {
+      const finalReward = activeDeposits.reduce((sum, deposit) => {
+        return sum.plus(new BigNumber(deposit.pendingReward || '0'));
+      }, new BigNumber(0));
+      
+      setActiveDepositsPendingReward(finalReward);
+      setActiveDeposits(prev => {
+        let updatedDeposits = [...prev];
+
+        userDeposits.forEach(newDeposit => {
+          const existingIndex = updatedDeposits.findIndex(
+            deposit => deposit.depositId === newDeposit.depositId
+          );
+          
+          if (existingIndex !== -1) {
+            updatedDeposits[existingIndex] = newDeposit;
+          } else {
+            updatedDeposits.push(newDeposit);
+          }
+        });
+        
+        return updatedDeposits.sort((a, b) => 
+          Number(a.depositStart) > Number(b.depositStart) ? -1 : 1
+        );
+      });
+      setIsActiveDepositsFetching(false)
+      setIsActiveDepositsLoaded(true)
+    }).catch((err) => {
+      setIsActiveDepositsFetching(false)
+      setIsActiveDepositsFetchingError(true)
+    })
+  }
+  /* ----------------------- */
   const [userDepositsRewards, setUserDepositsRewards] = useState({}); // { depositId: weiReward }
   const [isUserDepositsRewardsFetching, setIsUserDepositsRewardsFetching] = useState(false);
   const [isUserDepositsRewardsFetchingError, setIsUserDepositsRewardsFetchingError] = useState(false);
@@ -366,6 +454,7 @@ export default function StakeProvider(props) {
     setIsNeedUpdateUserSummary(true)
   }, [ injectedAccount ])
 
+  window.updateActiveDeposits = () => { _doFetchActiveDeposits() }
   return (
     <StakeContext.Provider value={{
       chainId: chainId,
@@ -401,6 +490,13 @@ export default function StakeProvider(props) {
       isUserDepositsRewardsLoaded,
       updateUserDepositsRewards: () => { _doUserDepositsRewards() },
 
+      activeDeposits,
+      isActiveDepositsFetching,
+      isActiveDepositsFetchingError,
+      isActiveDepositsLoaded,
+      activeDepositsPendingReward,
+      updateActiveDeposits: () => { _doFetchActiveDeposits() },
+      
       updateUserState: () => { setIsNeedUpdateUserSummary(true) },
       updateState: () => { setIsNeedUpdate(true) },
     }}>
