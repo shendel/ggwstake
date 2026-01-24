@@ -15,9 +15,14 @@ interface IERC20 {
 contract GGWStake is ReentrancyGuard {
     address public owner;
     address public oracle;
+    address public stakeOracle;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
+        _;
+    }
+    modifier onlyOwnerOrStakeOracle() {
+        require(msg.sender == owner || msg.sender == stakeOracle, "Only owner or stake orcle");
         _;
     }
     modifier onlyOwnerOrOracle() {
@@ -649,12 +654,15 @@ contract GGWStake is ReentrancyGuard {
         require(stakingToken.transfer(msg.sender, amount), "E2");
         bankAmount-=amount;
     }
-    function addTokensToBank(uint256 amount) external onlyOwnerOrOracle {
+    function addTokensToBank(uint256 amount) external onlyOwnerOrStakeOracle {
         require(stakingToken.transferFrom(msg.sender, address(this), amount), "E1");
         bankAmount+=amount;
     }
     function setOracle(address newOracle) external onlyOwner {
         oracle = newOracle;
+    }
+    function setStakeOracle(address newStakeOracle) external onlyOwner {
+        stakeOracle = newStakeOracle;
     }
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0),"E1");

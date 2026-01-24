@@ -177,11 +177,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0x4e5751e865814fa6b202436fd31787e76931b865888e24d761732cefe842bc2d",
+			"keccak256": "0xd5b7d09f61665cdf08c7b804540418f562a0a52559b35a1ca7e84f8bf6fb2af9",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://27972216bc1dd6b16fe6db508978dc01d1eea0b2aab755e3e046395d2a602457",
-				"dweb:/ipfs/QmYNvvz3mvKghaR84yEG3jeQyPwyYQLVCzS7mtn8e5TA2k"
+				"bzz-raw://ff49a6467a09da80aea9d86b26bb261a28bc420e6cd1b3f0c3a56b9696667745",
+				"dweb:/ipfs/QmbQgi52VABoB2iGdhLM5mAuRaUXnaHkJeDQqnosofg482"
 			]
 		}
 	},
