@@ -25,6 +25,7 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
       oracle,
       stakeOracle,
       activeDepositsCount,
+      estimateRequiredBankReservePrecise,
       bankAmount,
       currentMonth,
       minLockAmount,
@@ -38,6 +39,7 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
     isSummaryLoaded,
     tokenInfo,
     activeDepositsPendingReward,
+    estimatedMonthlyRewardsSum,
     updateActiveDeposits
   } = useStakeContext()
   useEffect(() => {
@@ -78,6 +80,18 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
       title: 'Pending reward',
       value: formatTokenAmount(activeDepositsPendingReward),
       key: 'pendingReward',
+      clickable: true
+    },
+    {
+      title: 'Estimated at month end',
+      value: formatTokenAmount(estimatedMonthlyRewardsSum),
+      key: 'estimatedMonthlyRewardsSum',
+      clickable: true
+    },
+    {
+      title: 'Estimated reward',
+      value: formatTokenAmount(estimateRequiredBankReservePrecise),
+      key: 'estimateRequiredBankReservePrecise',
       clickable: true
     },
     {

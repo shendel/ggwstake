@@ -8,6 +8,8 @@ import fetchMonths from '@/helpers_stake/fetchMonths'
 import fetchUserDeposits from '@/helpers_stake/fetchUserDeposits'
 import fetchDepositsRewardEarned from '@/helpers_stake/fetchDepositsRewardEarned'
 import fetchActiveDeposits from '@/helpers_stake/fetchActiveDeposits'
+import fetchCalculateRewardByMonthsBatch from '@/helpers_stake/fetchCalculateRewardByMonthsBatch'
+
 import BigNumber from "bignumber.js"
 
 
@@ -50,6 +52,7 @@ const StakeContext = createContext({
   isActiveDepositsFetchingError: false,
   isActiveDepositsLoaded: false,
   activeDepositsPendingReward: new BigNumber(0),
+  estimatedMonthlyRewardsSum: new BigNumber(0),
   updateActiveDeposits: () => {},
 
   updateUserState: () => {},
@@ -233,6 +236,72 @@ export default function StakeProvider(props) {
       _doUserDeposits()
     }
   }, [ userSummaryInfo ])
+  const [estimatedMonthlyRewardsSum, setEstimatedMonthlyRewardsSum] = useState(new BigNumber(0));
+  const [isCalculatingEstimatedRewards, setIsCalculatingEstimatedRewards] = useState(false);
+  const [isCalculatedEstimatedRewards, setIsCalculatedEstimatedRewards] = useState(false);
+
+  const calculateEstimatedMonthlyRewards = () => {
+    setIsCalculatingEstimatedRewards(true);
+    setEstimatedMonthlyRewardsSum(new BigNumber(0));
+
+    const currentMonthId = summaryInfo.currentMonth;
+    const currentMonthData = depositMonths.find(m => m.monthId === currentMonthId);
+
+    if (!currentMonthData) {
+      console.error(`Current month data (ID: ${currentMonthId}) not found in depositMonths.`);
+      setIsCalculatingEstimatedRewards(false);
+      return;
+    }
+
+    const currentMonthStart = currentMonthData.start;
+
+    if (activeDeposits.length === 0) {
+      console.log("No active deposits to calculate rewards for.");
+      setIsCalculatingEstimatedRewards(false);
+      setIsCalculatedEstimatedRewards(true); // Можно отметить как "рассчитано", хотя и пусто
+      return;
+    }
+
+    // Подготавливаем параметры для батч-запроса
+    const paramsList = activeDeposits.map(deposit => ({
+      amount: deposit.amount, // wei string
+      lockMonths: 1, // lockMonths = 1
+      depositStart: currentMonthStart, // depositStart = currentMonth.start
+    }));
+
+    let cumulativeSum = new BigNumber(0);
+
+    fetchCalculateRewardByMonthsBatch({
+      address: contractAddress,
+      chainId,
+      paramsList,
+      onBatch: (batchResults, offset, total) => {
+        const batchSum = batchResults.reduce(
+          (sum, rewardStr) => sum.plus(new BigNumber(rewardStr)),
+          new BigNumber(0)
+        );
+        cumulativeSum = cumulativeSum.plus(batchSum);
+        setEstimatedMonthlyRewardsSum(cumulativeSum);
+      }
+    })
+    .then((rewards) => {
+      setEstimatedMonthlyRewardsSum(cumulativeSum);
+      setIsCalculatedEstimatedRewards(true);
+    })
+    .catch((error) => {
+      console.error("Error calculating estimated monthly rewards:", error);
+    })
+    .finally(() => {
+      setIsCalculatingEstimatedRewards(false);
+    });
+  };
+
+  useEffect(() => {
+    if (isActiveDepositsLoaded && isSummaryLoaded && depositMonths[summaryInfo.currentMonth] && !isCalculatingEstimatedRewards && !isCalculatedEstimatedRewards) {
+      setIsCalculatingEstimatedRewards(true);
+      calculateEstimatedMonthlyRewards()
+    }
+  }, [ isActiveDepositsLoaded, depositMonths, isSummaryLoaded])
   /* ======================= */
   const [ activeDeposits, setActiveDeposits ] = useState([])
   const [ isActiveDepositsFetching, setIsActiveDepositsFetching ] = useState(false)
@@ -494,6 +563,7 @@ export default function StakeProvider(props) {
       isActiveDepositsFetchingError,
       isActiveDepositsLoaded,
       activeDepositsPendingReward,
+      estimatedMonthlyRewardsSum,
       updateActiveDeposits: () => { _doFetchActiveDeposits() },
       
       updateUserState: () => { setIsNeedUpdateUserSummary(true) },
