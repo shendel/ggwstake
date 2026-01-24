@@ -250,7 +250,6 @@ export default function StakeProvider(props) {
       address: contractAddress,
       chainId,
       offset: 0,
-      batchSize: 50,
       limit: summaryInfo.activeDepositsCount,
       onBatch: (batch, offset, total) => {
         setActiveDeposits(prev => {

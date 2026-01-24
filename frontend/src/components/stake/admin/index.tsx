@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useModal } from '@/contexts/ModalContext'
 import StakeBank from './bank/'
+import AdminStats from './AdminStats'
 
 const GGWStakeAdmin = (props) => {
-
+  const { gotoPage } = props
+  console.log('GGWStakeAdmin', gotoPage)
   const { openModal } = useModal()
   
   const handleManageBank = () => {
@@ -17,10 +19,26 @@ const GGWStakeAdmin = (props) => {
       )
     })
   }
+  const onStatsClick = (key) => {
+    switch(key) {
+      case 'currentMonth':
+        gotoPage('/admin/managemonths')
+        break;
+      case 'pendingReward':
+      case 'bankAmount':
+        handleManageBank()
+        break;
+    }
+  }
   return (
     <>
+      {/*
       <div>Stake admin</div>
       <button onClick={handleManageBank}>Manage bank</button>
+      */}
+      <AdminStats
+        onClick={onStatsClick}
+      />
     </>
   )
 }

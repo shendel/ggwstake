@@ -24,7 +24,7 @@ export default function Admin(props) {
 
   return (
     <>
-      <GGWStakeAdmin />
+      <GGWStakeAdmin {...props } />
       {/*
       <div className="min-h-screen flex items-center justify-center p-4">
         Stake
