@@ -22,11 +22,16 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
   const {
     summaryInfo: {
       owner,
+      oracle,
+      stakeOracle,
       activeDepositsCount,
       bankAmount,
       currentMonth,
       minLockAmount,
       minLockMonths,
+      depositsCount,
+      depositsAmount,
+      rewardsPayed
     },
     depositMonths,
     isDepositMonthsFetching,
@@ -60,10 +65,14 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
       subValue: tokenInfo?.name,
     },
     {
-      title: 'Active Deposits',
-      value: activeDepositsCount || 0,
+      title: 'Deposits (Active/Total)',
+      value: `${activeDepositsCount} / ${depositsCount}`,
       key: 'activeDeposits',
       clickable: true
+    },
+    {
+      title: 'Deposited (Locked) amount',
+      value: formatTokenAmount(depositsAmount),
     },
     {
       title: 'Pending reward',
@@ -80,6 +89,20 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
     {
       title: 'Owner',
       value: owner ? getShortAddress(owner, 6) : '—',
+      key: 'owner',
+      clickable: true,
+    },
+    {
+      title: 'Lock Oracle',
+      value: oracle ? getShortAddress(oracle, 6) : '—',
+      key: 'oracle',
+      clickable: true,
+    },
+    {
+      title: 'Add Pool Oracle',
+      value: stakeOracle ? getShortAddress(stakeOracle, 6) : '—',
+      key: 'stakeOracle',
+      clickable: true,
     },
     {
       title: 'Min Lock Amount',

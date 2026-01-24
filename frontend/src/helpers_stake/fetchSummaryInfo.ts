@@ -30,12 +30,14 @@ const fetchSummaryInfo = (options) => {
         info: { func: 'getSummaryInfo' },
         owner: { func: 'owner' },
         oracle: { func: 'oracle' },
+        //stakeOracle: { func: 'stakeOracle' },
       }
     }).then((answer) => {
       const {
         info,
         owner,
-        oracle
+        oracle,
+        //stakeOracle
       } = answer
 
       resolve({
@@ -45,6 +47,7 @@ const fetchSummaryInfo = (options) => {
           ...info,
           owner,
           oracle,
+          stakeOracle: oracle,
         }
       })
     }).catch((err) => {

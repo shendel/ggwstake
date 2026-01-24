@@ -5,7 +5,7 @@ import AdminStats from './AdminStats'
 
 const GGWStakeAdmin = (props) => {
   const { gotoPage } = props
-  console.log('GGWStakeAdmin', gotoPage)
+
   const { openModal } = useModal()
   
   const handleManageBank = () => {

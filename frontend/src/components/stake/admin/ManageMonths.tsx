@@ -141,7 +141,9 @@ const ManageMonths = (props) => {
     
     if (months.length > 0) {
       // Берём end последнего месяца как старт для нового
-      const lastMonth = months[months.length - 1];
+      const lastMonth = months.sort((a,b) => { return Number(a.end) > Number(b.end) ? 1 : 1})[0]
+      //const lastMonth = months[months.length - 1];
+      //console.log(lastMonth2[0], lastMonth, lastMonth2)
       currentTs = lastMonth.end;
     } else {
       // Если нет месяцев - начинаем с текущего времени
@@ -172,7 +174,8 @@ const ManageMonths = (props) => {
 
     if (months.length > 0) {
       // Берём end последнего месяца как старт для нового
-      const lastMonth = months[months.length - 1];
+      //const lastMonth = months[months.length - 1];
+      const lastMonth = months.sort((a,b) => { return Number(a.end) > Number(b.end) ? 1 : 1})[0]
       currentStart = lastMonth.end + 1; // +1 секунда после окончания
     } else {
       // Начинаем с текущего месяца в 00:00:00 UTC
