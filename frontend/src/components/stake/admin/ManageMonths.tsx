@@ -10,6 +10,7 @@ import LoadingOverlay from '@/components/LoadingOverlay'
 import InfoField from '@/components/appconfig/ui/InfoField'
 import SortToggle from '@/components/appconfig/ui/SortToggle'
 import HideShow from '@/components/appconfig/ui/HideShow'
+import Button from '@/components/appconfig/ui/Button'
 import { fromWei } from '@/helpers/wei'
 
 // Конвертирует Unix timestamp в строку для отображения
@@ -30,6 +31,8 @@ const displayToUnix = (str) => {
 };
 
 const ManageMonths = (props) => {
+  const { gotoPage } = props
+
   const {
     chainId,
     contractAddress,
@@ -280,157 +283,160 @@ const ManageMonths = (props) => {
 
   const tableHeadCellClass = `px-4 py-3 text-left text-xs font-medium uppercase tracking-wider`
   return (
-    <div className="mx-auto p-6 bg-gray-900 text-white">
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
-            <input
-              type="number"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Month Count</label>
-            <input
-              type="number"
-              value={fillCount}
-              onChange={(e) => setFillCount(parseInt(e.target.value))}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={fillMonths}
-              className="bg-purple-600 hover:bg-purple-700 w-full py-2 rounded mr-2"
-            >
-              Add Test Periods
-            </button>
-          </div>
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={fillRealMonths}
-              className="bg-blue-600 hover:bg-blue-700 w-full py-2 rounded"
-            >
-              Add Real Months
-            </button>
+    <>
+      <Button color={`gray`} fullWidth={true} onClick={() => { gotoPage('/admin') }}>{`Back to Admin Dashboard`}</Button>
+      <div className="mx-auto p-6 bg-gray-900 text-white">
+        <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+          <div className="grid grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+              <input
+                type="number"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(parseInt(e.target.value))}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Month Count</label>
+              <input
+                type="number"
+                value={fillCount}
+                onChange={(e) => setFillCount(parseInt(e.target.value))}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={fillMonths}
+                className="bg-purple-600 hover:bg-purple-700 w-full py-2 rounded mr-2"
+              >
+                Add Test Periods
+              </button>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={fillRealMonths}
+                className="bg-blue-600 hover:bg-blue-700 w-full py-2 rounded"
+              >
+                Add Real Months
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <InfoField>
-        {`The time is indicated according to UTC. In blockchain is UnixTimeStamp (UTS). LT - Local Time in your time-zone`}
-      </InfoField>
-      <div className="space-y-6 relative">
-        {controlPanel}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead>
-              <tr>
-                <th className={tableHeadCellClass}>{`ID`}</th>
-                <th className={tableHeadCellClass}>{`Start Date`}</th>
-                <th className={tableHeadCellClass}>{`End Date`}</th>
-                <th className={tableHeadCellClass}>{`Len`}</th>
-                <th className={tableHeadCellClass}>
-                  {`Rate (bps)`}
-                  <div className="text-sm text-gray-400 mt-1">
-                    {(isSummaryLoaded && summaryInfo && summaryInfo.globalRateBps) ? (
-                      <>{`Global: ${summaryInfo.globalRateBps}`}</>
-                    ) : (
-                      <>{`...`}</>
-                    )}
-                  </div>
-                </th>
-                <th className={tableHeadCellClass}>{`Dep. Count`}</th>
-                <th className={tableHeadCellClass}>{`Dep. Amount (${tokenInfo.symbol})`}</th>
-                <th className={tableHeadCellClass}>{`Reward Amount (${tokenInfo.symbol})`}</th>
-                <th className={tableHeadCellClass}>{`Actions`}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {displayMonths.map((row, index) => {
-                const isBC = (row.monthId !== undefined) ? true : false
-                const isFinished = (isBC && (Number(row.monthId) < Number(currentMonth))) ? true : false
-                const isCurrent = (isBC && (Number(row.monthId) == Number(currentMonth))) ? true : false
-                return (
-                  <tr key={index} className={`hover:bg-gray-800 ${(isCurrent) ? 'bg-green-900 hover:bg-green-900' : (isFinished) ? 'bg-red-900 hover:bg-red-900' : ''}`}>
-                    <td className="px-4 py-3">
-                      {(row.monthId !== undefined) ? row.monthId : '#'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-bold text-gray-400 mt-1">
-                        {unixToDisplay(row.start)}
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        LT: {unixToLocal(row.start)}
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        UTS: {row.start}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-bold text-gray-400 mt-1">
-                        {unixToDisplay(row.end)}
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        LT: {unixToLocal(row.end)}
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        UTS: {row.end}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {getIntervalLength(row.start, row.end)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {isBC ? (
-                        <div className="font-bold text-gray-400 mt-1">
-                          {row.rateBps}
-                        </div>
+        <InfoField>
+          {`The time is indicated according to UTC. In blockchain is UnixTimeStamp (UTS). LT - Local Time in your time-zone`}
+        </InfoField>
+        <div className="space-y-6 relative">
+          {controlPanel}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead>
+                <tr>
+                  <th className={tableHeadCellClass}>{`ID`}</th>
+                  <th className={tableHeadCellClass}>{`Start Date`}</th>
+                  <th className={tableHeadCellClass}>{`End Date`}</th>
+                  <th className={tableHeadCellClass}>{`Len`}</th>
+                  <th className={tableHeadCellClass}>
+                    {`Rate (bps)`}
+                    <div className="text-sm text-gray-400 mt-1">
+                      {(isSummaryLoaded && summaryInfo && summaryInfo.globalRateBps) ? (
+                        <>{`Global: ${summaryInfo.globalRateBps}`}</>
                       ) : (
-                        <input
-                          type="number"
-                          value={row.rateBps}
-                          readOnly={isBC}
-                          onChange={(e) => updateRow(index, 'rateBps', e.target.value)}
-                          className=" bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-                          placeholder="Rate in bps"
-                        />
+                        <>{`...`}</>
                       )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {(isBC) ? row.depositsCount : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {(isBC && tokenInfo) ? fromWei(row.depositsAmount, tokenInfo.decimals) : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {(isBC && tokenInfo) ? fromWei(row.rewardsAmount, tokenInfo.decimals) : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {((((index == (months.length - 1)) && !isReversed) || (index == 0 && isReversed)) && !isFinished) && (
-                        <button
-                          type="button"
-                          onClick={() => removeRow(index)}
-                          className="text-red-400 hover:text-red-300 px-2 py-1 rounded"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          <LoadingOverlay isLoading={isDepositMonthsFetching} />
+                    </div>
+                  </th>
+                  <th className={tableHeadCellClass}>{`Dep. Count`}</th>
+                  <th className={tableHeadCellClass}>{`Dep. Amount (${tokenInfo.symbol})`}</th>
+                  <th className={tableHeadCellClass}>{`Reward Amount (${tokenInfo.symbol})`}</th>
+                  <th className={tableHeadCellClass}>{`Actions`}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {displayMonths.map((row, index) => {
+                  const isBC = (row.monthId !== undefined) ? true : false
+                  const isFinished = (isBC && (Number(row.monthId) < Number(currentMonth))) ? true : false
+                  const isCurrent = (isBC && (Number(row.monthId) == Number(currentMonth))) ? true : false
+                  return (
+                    <tr key={index} className={`hover:bg-gray-800 ${(isCurrent) ? 'bg-green-900 hover:bg-green-900' : (isFinished) ? 'bg-red-900 hover:bg-red-900' : ''}`}>
+                      <td className="px-4 py-3">
+                        {(row.monthId !== undefined) ? row.monthId : '#'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-bold text-gray-400 mt-1">
+                          {unixToDisplay(row.start)}
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          LT: {unixToLocal(row.start)}
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          UTS: {row.start}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-bold text-gray-400 mt-1">
+                          {unixToDisplay(row.end)}
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          LT: {unixToLocal(row.end)}
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          UTS: {row.end}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {getIntervalLength(row.start, row.end)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isBC ? (
+                          <div className="font-bold text-gray-400 mt-1">
+                            {row.rateBps}
+                          </div>
+                        ) : (
+                          <input
+                            type="number"
+                            value={row.rateBps}
+                            readOnly={isBC}
+                            onChange={(e) => updateRow(index, 'rateBps', e.target.value)}
+                            className=" bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                            placeholder="Rate in bps"
+                          />
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(isBC) ? row.depositsCount : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(isBC && tokenInfo) ? fromWei(row.depositsAmount, tokenInfo.decimals) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(isBC && tokenInfo) ? fromWei(row.rewardsAmount, tokenInfo.decimals) : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {((((index == (months.length - 1)) && !isReversed) || (index == 0 && isReversed)) && !isFinished) && (
+                          <button
+                            type="button"
+                            onClick={() => removeRow(index)}
+                            className="text-red-400 hover:text-red-300 px-2 py-1 rounded"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            <LoadingOverlay isLoading={isDepositMonthsFetching} />
+          </div>
+          {controlPanel}
         </div>
-        {controlPanel}
       </div>
-    </div>
+    </>
   );
 }
 

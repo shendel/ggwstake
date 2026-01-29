@@ -24,7 +24,7 @@ export default function AdminManageMonths(props) {
 
   return (
     <>
-      <ManageMonths />
+      <ManageMonths {...props} />
     </>
   )
 }
