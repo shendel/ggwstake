@@ -8,7 +8,7 @@ import { callMulticall } from '@/helpers/callMulticall'
 import delay from '@/helpers/delay'
 
 
-const fetchMonths = (options) => {
+const fetchDeposits = (options) => {
   const {
     address,
     chainId,
@@ -37,16 +37,16 @@ const fetchMonths = (options) => {
           target: address,
           encoder: abiI,
           calls: {
-            batch: { func: 'getMonths', args: [ currentOffset, (limit < batchSize) ? limit : batchSize ], asArray: true },
+            batch: { func: 'getDeposits', args: [ currentOffset, (limit < batchSize) ? limit : batchSize ], asArray: true },
           }
         }).then((answer) => {
           const {
             batch
           } = answer
-          console.log('>> months batch', batch)
+          console.log('>> active deposits batch', batch)
           batchResolved(batch)
         }).catch((err) => {
-          console.log('>>> Fail fetch all info', err)
+          console.log('>>> Fail fetch active deposits', err)
           batchReject(err)
         })
       })
@@ -68,4 +68,4 @@ const fetchMonths = (options) => {
   })
 }
 
-export default fetchMonths
+export default fetchDeposits

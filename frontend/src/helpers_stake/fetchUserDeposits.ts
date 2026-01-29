@@ -38,7 +38,7 @@ const fetchUserDeposits = (options) => {
           target: address,
           encoder: abiI,
           calls: {
-            batch: { func: 'getUserDeposits', args: [ user, currentOffset, batchSize ], asArray: true },
+            batch: { func: 'getUserDeposits', args: [ user, currentOffset, (limit < batchSize) ? limit : batchSize ], asArray: true },
           }
         }).then((answer) => {
           const {
@@ -54,13 +54,13 @@ const fetchUserDeposits = (options) => {
     }
 
     try {
-      while (currentOffset <= limit) {
+      do {
         const batch = await _doFetchBatch()
         onBatch(batch, currentOffset, limit)
         result = [...result, ...batch]
         currentOffset+=batchSize
         await delay(batchDelay)
-      }
+      } while (currentOffset <= limit)
     } catch (err) {
       reject(err)
     }
