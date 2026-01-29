@@ -30,7 +30,8 @@ function GGWStakeView(pageProps) {
   const viewsPaths = {
     '/': Home,
     '/admin': Admin,
-    '/admin/deposits': AdminDeposits,
+    '/admin/deposits/': AdminDeposits,
+    '/admin/deposits/:isActive': AdminDeposits,
     '/admin/managemonths': AdminManageMonths,
   }
 

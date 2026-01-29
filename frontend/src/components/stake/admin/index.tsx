@@ -24,6 +24,9 @@ const GGWStakeAdmin = (props) => {
       case 'currentMonth':
         gotoPage('/admin/managemonths')
         break;
+      case 'activeDeposits':
+        gotoPage('/admin/deposits/active')
+        break;
       case 'pendingReward':
       case 'bankAmount':
         handleManageBank()
