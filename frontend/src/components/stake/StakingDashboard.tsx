@@ -12,6 +12,8 @@ import { formatAmount } from '@/helpers_stake/'
 import { getPastMonths } from '@/helpers_stake/'
 import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import { useStakeContext } from '@/contexts/StakeContext'
+import { ConnectWalletButton } from '@/web3/ConnectWalletButton'
+
 
 export default function StakingDashboard() {
   const {
@@ -42,33 +44,6 @@ export default function StakingDashboard() {
     tokenInfo,
     isSummaryLoaded,
   } = useStakeContext()
-  
-  console.log('>> stakeContext', stakeContext)
-  useEffect(() => {
-    // Имитация загрузки данных из контракта
-    setTimeout(() => {
-      setAccount('0x...1234');
-      setDeposits([
-        { id: 0, amount: '100', lockMonths: 3, unlockDate: '2026-04-15', reward: '1.26' },
-        { id: 1, amount: '50', lockMonths: 6, unlockDate: '2026-07-15', reward: '3.15' }
-      ]);
-      
-      // Статистика из контракта:
-      setStats({
-        totalDeposits: 42,
-        totalAmount: '1250.50',
-        totalUsers: 28,
-        rewardsByMonth: [
-          { month: 0, reward: '12.5' },
-          { month: 1, reward: '18.3' },
-          { month: 2, reward: '22.1' },
-          { month: 3, reward: '19.8' },
-          { month: 4, reward: '15.2' }
-        ]
-      });
-      setLoading(false);
-    }, 800);
-  }, []);
 
   const [ monthsForChart, setMonthsForChart ] = useState([])
   
@@ -131,12 +106,34 @@ export default function StakingDashboard() {
             {injectedAccount && (
               <CreateDeposit />
             )}
+            {/*
             <RewardsChart months={monthsForChart} rewardsByMonth={stats.rewardsByMonth} />
+            */}
           </div>
           {injectedAccount ? (
             <UserDeposits />
           ) : (
-            <div>Not connected</div>
+            <div>
+              <ConnectWalletButton
+                connectView={(isConnecting, openConnectModal) => {
+                  return (
+                    <button
+                      disabled={isConnecting}
+                      onClick={openConnectModal}
+                      className="connectWalletButton w-full"
+                    >
+                      Connect Wallet
+                    </button>
+                  )
+                }}
+                connectedView={(walletAddress, nms, openModal) => {
+                  return null
+                }}
+                wrongChainView={(openChainModal) => {
+                  return null
+                }}
+              />
+            </div>
           )}
         </div>
       </div>
