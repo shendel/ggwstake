@@ -8,6 +8,7 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import LoadingPlaceholder from '@/components/LoadingPlaceholder'
 import ManageMonths from '@/components/stake/admin/ManageMonths'
 import { useStakeContext } from '@/contexts/StakeContext'
+import OnlyOwner from '@/components/stake/admin/OnlyOwner'
 
 export default function AdminManageMonths(props) {
   const {
@@ -23,8 +24,8 @@ export default function AdminManageMonths(props) {
 
 
   return (
-    <>
+    <OnlyOwner>
       <ManageMonths {...props} />
-    </>
+    </OnlyOwner>
   )
 }

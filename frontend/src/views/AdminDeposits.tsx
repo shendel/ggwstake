@@ -7,6 +7,7 @@ import ConnectWalletButton from '@/components/ConnectWalletButton'
 import AdminDepositsPage from '@/components/stake/admin/AdminDepositsPage'
 import LoadingPlaceholder from '@/components/LoadingPlaceholder'
 import { useStakeContext } from '@/contexts/StakeContext'
+import OnlyOwner from '@/components/stake/admin/OnlyOwner'
 
 export default function AdminDeposits(props) {
   const {
@@ -22,8 +23,8 @@ export default function AdminDeposits(props) {
 
 
   return (
-    <>
+    <OnlyOwner>
       <AdminDepositsPage {...props} />
-    </>
+    </OnlyOwner>
   )
 }

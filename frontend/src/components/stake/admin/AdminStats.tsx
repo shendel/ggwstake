@@ -69,12 +69,14 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
     {
       title: 'Deposits (Active/Total)',
       value: `${activeDepositsCount} / ${depositsCount}`,
-      key: 'activeDeposits',
+      key: 'deposits',
       clickable: true
     },
     {
       title: 'Deposited (Locked) amount',
       value: formatTokenAmount(depositsAmount),
+      key: 'activeDeposits',
+      clickable: true
     },
     {
       title: 'Pending reward',

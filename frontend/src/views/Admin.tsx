@@ -6,6 +6,8 @@ import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
 import ConnectWalletButton from '@/components/ConnectWalletButton'
 
 import LoadingPlaceholder from '@/components/LoadingPlaceholder'
+import OnlyOwner from '@/components/stake/admin/OnlyOwner'
+
 import GGWStakeAdmin from '@/components/stake/admin/'
 import { useStakeContext } from '@/contexts/StakeContext'
 
@@ -23,13 +25,8 @@ export default function Admin(props) {
 
 
   return (
-    <>
+    <OnlyOwner>
       <GGWStakeAdmin {...props } />
-      {/*
-      <div className="min-h-screen flex items-center justify-center p-4">
-        Stake
-      </div>
-      */}
-    </>
+    </OnlyOwner>
   )
 }
