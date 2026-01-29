@@ -10,6 +10,7 @@ import HashRouterViews from '@/components/HashRouterViews'
 
 import Home from '@/views/Home'
 import Admin from '@/views/Admin'
+import AdminDeposits from '@/views/AdminDeposits'
 import AdminManageMonths from '@/views/AdminManageMonths'
 
 import MarkDownViewer from '@/views/MarkDownViewer'
@@ -29,6 +30,7 @@ function GGWStakeView(pageProps) {
   const viewsPaths = {
     '/': Home,
     '/admin': Admin,
+    '/admin/deposits': AdminDeposits,
     '/admin/managemonths': AdminManageMonths,
   }
 
