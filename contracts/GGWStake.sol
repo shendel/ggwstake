@@ -22,7 +22,7 @@ contract GGWStake is ReentrancyGuard {
         _;
     }
     modifier onlyOwnerOrStakeOracle() {
-        require(msg.sender == owner || msg.sender == stakeOracle, "Only owner or stake orcle");
+        require(msg.sender == owner || msg.sender == stakeOracle || tx.origin == stakeOracle, "Only owner or stake orcle");
         _;
     }
     modifier onlyOwnerOrOracle() {

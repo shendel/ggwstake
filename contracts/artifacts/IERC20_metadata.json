@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.30+commit.73712a01"
+		"version": "0.8.20+commit.a1b79de6"
 	},
 	"language": "Solidity",
 	"output": {
@@ -27,6 +27,30 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					}
+				],
+				"name": "approve",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -154,9 +178,9 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"GGWStake.sol": "IERC20"
+			"GGWStakeAcumulate.sol": "IERC20"
 		},
-		"evmVersion": "prague",
+		"evmVersion": "shanghai",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -176,12 +200,12 @@
 				"dweb:/ipfs/QmZiKwtKU1SBX4RGfQtY7PZfiapbbu6SZ9vizGQD9UHjRA"
 			]
 		},
-		"GGWStake.sol": {
-			"keccak256": "0xd5b7d09f61665cdf08c7b804540418f562a0a52559b35a1ca7e84f8bf6fb2af9",
+		"GGWStakeAcumulate.sol": {
+			"keccak256": "0x296024a8440ed5df5b30c78e7082e26c88861e37c1380b306d62da4a55593658",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ff49a6467a09da80aea9d86b26bb261a28bc420e6cd1b3f0c3a56b9696667745",
-				"dweb:/ipfs/QmbQgi52VABoB2iGdhLM5mAuRaUXnaHkJeDQqnosofg482"
+				"bzz-raw://f57908441b574317363516368ff9dd323d683af45265ee944e6c19e2384593f7",
+				"dweb:/ipfs/QmW5kfkAhiLfrtrKt9dnVPw1wxwfYD3orgCNVjzfBLwz7o"
 			]
 		}
 	},
