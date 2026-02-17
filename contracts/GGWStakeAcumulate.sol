@@ -48,24 +48,24 @@ contract GGWStakePoolAcumulate is ReentrancyGuard {
         oracle = _oracle;
         stakeContract = IGGWStake(_stakeContract);
     }
-/*
+
     event ToStakePool(uint256 date, uint256 amount);
     
     function toStakePool() public onlyOwnerOrOracle {
-        uint256 amount = token.balanceOf(address(this));
-        if (amount > 0) {
-            burnsCount++;
-            burnHistory[burnsCount] = BurnInfo({
+        uint256 toStakePoolAmount = token.balanceOf(address(this));
+        if (toStakePoolAmount > 0) {
+            token.approve(address(stakeContract), toStakePoolAmount);
+            stakeContract.addTokensToBank(toStakePoolAmount);
+            stakePoolsCount++;
+            stakePoolsHistory[stakePoolsCount] = StakePoolInfo({
                 date: block.timestamp,
-                amount: burnAmount
+                amount: toStakePoolAmount
             });
-            totalBurnAmount += burnAmount;
-            token.burn(burnAmount);
-            emit Burn(block.timestamp, burnAmount);
-
+            totalToStakePoolAmount += toStakePoolAmount;
+            emit ToStakePool(block.timestamp, toStakePoolAmount);
         }
     }
-*/
+
     function getLastStakePoolInfo() public view returns (StakePoolInfo memory) {
         return stakePoolsHistory[stakePoolsCount];
     }
@@ -91,11 +91,14 @@ contract GGWStakePoolAcumulate is ReentrancyGuard {
     function setOracle(address newOracle) public onlyOwner {
         oracle = newOracle;
     }
+    function setStakeContract(address newStakeContract) public onlyOwner {
+        stakeContract = IGGWStake(newStakeContract);
+    }
     function transferOwnership(address newOwner) public onlyOwner {         
         owner = newOwner;
     }
     function recoverWrongToken(address tokenAddress, uint256 amount) external onlyOwner {
-        require(tokenAddress != address(token), "Cant recower burn token. Only burn");
+        require(tokenAddress != address(token), "Cant recower stake token. Only add to stake pool");
         IERC20(tokenAddress).transfer(owner, amount);
     }
 
