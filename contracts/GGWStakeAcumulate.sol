@@ -51,7 +51,7 @@ contract GGWStakePoolAcumulate is ReentrancyGuard {
 
     event ToStakePool(uint256 date, uint256 amount);
     
-    function toStakePool() public onlyOwnerOrOracle {
+    function toStakePool() public nonReentrant onlyOwnerOrOracle {
         uint256 toStakePoolAmount = token.balanceOf(address(this));
         if (toStakePoolAmount > 0) {
             token.approve(address(stakeContract), toStakePoolAmount);

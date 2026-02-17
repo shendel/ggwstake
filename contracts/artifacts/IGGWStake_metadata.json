@@ -55,11 +55,11 @@
 			]
 		},
 		"GGWStakeAcumulate.sol": {
-			"keccak256": "0xed7f64c3252d6f0005b66f2452b98e2c13dd63b8e483a6cdf28c87bc797bca01",
+			"keccak256": "0xd53b42b21bbe2f60e4dd615ba18a55f36f9b82c4ab6e56f99d9beb3e40bb354b",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://1a06b81188574c0edd38d79fecccb0bc237878ebfa476245fb3941db206eaf40",
-				"dweb:/ipfs/Qme8WmSgsn3F7D2Zmt21cku4mNGGJjCrfStjmGpEo7xeBU"
+				"bzz-raw://8c554a5d11eb9bbf1ea77cd8714c897a0ffd9994e320d1ef0ddd8f8a0b177f49",
+				"dweb:/ipfs/QmbC9hmjYhiQVSuAEXdAjtswb8NFhiiL9v7hq7ZiRMVJQF"
 			]
 		}
 	},
