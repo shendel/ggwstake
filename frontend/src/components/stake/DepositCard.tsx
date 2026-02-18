@@ -19,6 +19,7 @@ import withdrawSavedReward from '@/helpers_stake/withdrawSavedReward'
 import withdrawRewardOnly from '@/helpers_stake/withdrawRewardOnly'
 import withdrawRewardAndClose from '@/helpers_stake/withdrawRewardAndClose'
 import DotsLoader from '@/components/DotsLoader'
+import SwitchChainButton from '@/components/ui/SwitchChainButton'
 
 
 interface DepositCardProps {
@@ -407,78 +408,84 @@ export default function DepositCard(props: DepositCardProps) {
         <div className="border-t p-4 bg-gray-900">
           <h4 className="font-medium text-gray-200 text-center mb-2">Withdraw Options</h4>
           <div className="space-y-2">
-            {!deposit.active && deposit.isSaved ? (
-              <button 
-                className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
-                onClick={handleWithdrawSafeReward}
-                disabled={isWithdrawing}
-              >
-                {isWithdrawing && isWithdrawSafeReward ? (
-                  <>
-                    <CircleInlineLoader />
-                    <span>{`Withdrawing...`}</span>
-                  </>
-                ) : (
-                  <span>
-                    Withdraw Reward ({formatAmount(deposit.savedReward)} {tokenSymbol})
-                  </span>
-                )}
-              </button>
+            {chainId !== injectedChainId ? (
+              <SwitchChainButton className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm" title={`Switch chain`} />
             ) : (
               <>
-                {(new BigNumber(deposit.pendingReward).isEqualTo(0) && !isLocked) ? (
-                  <>
-                    <button 
-                      disabled={isLocked || isWithdrawing}
-                      onClick={() => { handleWithdrawRewardAndClose(true) }}
-                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
-                    >
-                      {isWithdrawing && isWithdrawRewardAndClose ? (
-                        <>
-                          <CircleInlineLoader />
-                          <span>{`Withdrawing...`}</span>
-                        </>
-                      ) : (
-                        <span>
-                          Close Deposit ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
-                        </span>
-                      )}
-                    </button>
-                  </>
+                {!deposit.active && deposit.isSaved ? (
+                  <button 
+                    className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
+                    onClick={handleWithdrawSafeReward}
+                    disabled={isWithdrawing}
+                  >
+                    {isWithdrawing && isWithdrawSafeReward ? (
+                      <>
+                        <CircleInlineLoader />
+                        <span>{`Withdrawing...`}</span>
+                      </>
+                    ) : (
+                      <span>
+                        Withdraw Reward ({formatAmount(deposit.savedReward)} {tokenSymbol})
+                      </span>
+                    )}
+                  </button>
                 ) : (
                   <>
-                    <button
-                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center text-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
-                      disabled={isWithdrawing}
-                      onClick={handleWithdrawRewardOnly}
-                    >
-                      {isWithdrawing && isWithdrawRewardOnly ? (
-                        <>
-                          <CircleInlineLoader />
-                          <span>{`Withdrawing...`}</span>
-                        </>
-                      ) : (
-                        <span>
-                          Rewards only ({formatAmount(deposit.pendingReward)} {tokenSymbol})
-                        </span>
-                      )}
-                    </button>
-                    <button 
-                      disabled={isLocked || isWithdrawing}
-                      onClick={() => { handleWithdrawRewardAndClose(false) }}
-                      className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
-                    >
-                      {isWithdrawing && isWithdrawRewardAndClose ? (
-                        <>
-                          <CircleInlineLoader />
-                          <span>{`Withdrawing...`}</span>
-                        </>
-                      ) : (
-                        <span>
-                          Principal + Rewards ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
-                        </span>
-                      )}
-                    </button>
+                    {(new BigNumber(deposit.pendingReward).isEqualTo(0) && !isLocked) ? (
+                      <>
+                        <button 
+                          disabled={isLocked || isWithdrawing}
+                          onClick={() => { handleWithdrawRewardAndClose(true) }}
+                          className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
+                        >
+                          {isWithdrawing && isWithdrawRewardAndClose ? (
+                            <>
+                              <CircleInlineLoader />
+                              <span>{`Withdrawing...`}</span>
+                            </>
+                          ) : (
+                            <span>
+                              Close Deposit ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
+                            </span>
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center text-center font-bold w-full text-left py-1.5 px-3 bg-green-600 border border-green-900 hover:text-white rounded hover:bg-green-500 text-sm"
+                          disabled={isWithdrawing}
+                          onClick={handleWithdrawRewardOnly}
+                        >
+                          {isWithdrawing && isWithdrawRewardOnly ? (
+                            <>
+                              <CircleInlineLoader />
+                              <span>{`Withdrawing...`}</span>
+                            </>
+                          ) : (
+                            <span>
+                              Rewards only ({formatAmount(deposit.pendingReward)} {tokenSymbol})
+                            </span>
+                          )}
+                        </button>
+                        <button 
+                          disabled={isLocked || isWithdrawing}
+                          onClick={() => { handleWithdrawRewardAndClose(false) }}
+                          className="disabled:bg-gray-500 disabled:border-gray-900 flex items-center justify-center  text-center font-bold w-full text-left py-1.5 px-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 text-sm"
+                        >
+                          {isWithdrawing && isWithdrawRewardAndClose ? (
+                            <>
+                              <CircleInlineLoader />
+                              <span>{`Withdrawing...`}</span>
+                            </>
+                          ) : (
+                            <span>
+                              Principal + Rewards ({new BigNumber(formatAmount(deposit.amount)).plus(formatAmount(deposit.pendingReward)).toFixed(4)} {tokenSymbol})
+                            </span>
+                          )}
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </>
