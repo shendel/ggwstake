@@ -14,6 +14,7 @@ import SummaryDepositInfo from './SummaryDepositInfo'
 import DepositSuccess from './DepositSuccess'
 import DotsLoader from '@/components/DotsLoader'
 import { motion } from 'framer-motion';
+import { LOCK_MONTHS_OPTIONS } from '@/config'
 
 
 export default function CreateDeposit() {
@@ -281,10 +282,11 @@ export default function CreateDeposit() {
               }}
               className="w-full px-4 py-2 border text-gray-800 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="1">1 month</option>
-              <option value="3">3 months</option>
-              <option value="6">6 months</option>
-              <option value="12">12 months</option>
+              {LOCK_MONTHS_OPTIONS.map(({value, title}, key) => {
+                return (
+                  <option value={value} key={key}>{title}</option>
+                )
+              })}
             </select>
           </div>
 
