@@ -1,6 +1,6 @@
 {
   "name": "GGWStake",
-  "address": "0x20dfe3930bd176d22a4678aacbb64d04ea5ef6c4",
+  "address": "0xd034df3ba4222cbcaef1f83cd5171ac1a3a06966",
   "abi": [
     {
       "inputs": [
@@ -548,6 +548,19 @@
         }
       ],
       "name": "setOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newStakeOracle",
+          "type": "address"
+        }
+      ],
+      "name": "setStakeOracle",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1857,6 +1870,19 @@
     },
     {
       "inputs": [],
+      "name": "stakeOracle",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "stakingToken",
       "outputs": [
         {
@@ -1894,5 +1920,5 @@
     }
   ],
   "filePath": "electron/GGWStake.sol",
-  "pinnedAt": 1768797970624
+  "pinnedAt": 1771510530745
 }

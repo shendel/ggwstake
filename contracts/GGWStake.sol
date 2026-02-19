@@ -186,6 +186,7 @@ contract GGWStake is ReentrancyGuard {
 
         return ret;
     }
+    
     // --- Admin: Global Rate ---
     function setGlobalRateBps(uint256 _rateBps) external onlyOwner {
         require(_rateBps <= 10_000, "Rate > 100%");

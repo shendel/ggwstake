@@ -1965,11 +1965,11 @@
 			]
 		},
 		"GGWStake.sol": {
-			"keccak256": "0x71cc910789e09bf698dfcb542a8b7741236c6d6cefa72579f790e37d71c678b1",
+			"keccak256": "0x4e61f363a4ecd23d9b9db0422817ab3f4fe6ceae1bfcc7bc9bbd27c482f3ca5a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://32e95c491fad781ce2259f41e81a0475df456f5d2fa204d9997effbedaff1247",
-				"dweb:/ipfs/QmZYNhhaBkGZ6vf6oecUGCV1YkzzYEJVpGSQmWuHgpxGsN"
+				"bzz-raw://13f1dc383543368440ed6ca1bc9bf72870836700420d347cb6cdf5e557868a8e",
+				"dweb:/ipfs/QmSG1AgvACG9T25joSTNrfqibihVvTZosXTvVojdzbgcpX"
 			]
 		}
 	},
