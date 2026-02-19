@@ -23,6 +23,7 @@ const GGWStakeAdmin = (props) => {
       minLockMonths,
       depositsCount,
       depositsAmount,
+      globalRateBps,
       rewardsPayed
     },
     depositMonths,
@@ -103,6 +104,31 @@ const GGWStakeAdmin = (props) => {
               }}
               checkError={(value) => {
                 if (Number(value) < 0) return 'Value must be greater or equal to zero'
+                return false
+              }}
+              isAddress={false}
+              afterSave={() => { updateState() }}
+            />
+          )
+        })
+        break;
+      case 'globalRateBps':
+        openModal({
+          title: 'Global Rate in BPS',
+          hideBottomButtons: true,
+          fullWidth: true,
+          id: 'EDIT_CONTRACT_VALUE',
+          content: (
+            <ContractEditor
+              currentValue={globalRateBps}
+              description={`Global Rate in BPS (10000 = 100%, 100 = 1%)`}
+              contractFunction={`setGlobalRateBps`}
+              beforeSave={(value) => {
+                return `0x` + new BigNumber(value).toString(16)
+              }}
+              checkError={(value) => {
+                if (Number(value) < 0) return 'Value must be greater or equal to zero'
+                if (Number(value) > 10000) return 'Value cant be greater than 10000 (100%)'
                 return false
               }}
               isAddress={false}

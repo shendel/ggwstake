@@ -32,7 +32,8 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
       minLockMonths,
       depositsCount,
       depositsAmount,
-      rewardsPayed
+      rewardsPayed,
+      globalRateBps
     },
     depositMonths,
     isDepositMonthsFetching,
@@ -131,6 +132,12 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
       title: 'Min Lock Months',
       value: minLockMonths || '-',
       key: 'minLockMonths',
+      clickable: true,
+    },
+    {
+      title: 'Global Rate BPS',
+      value: globalRateBps || '-',
+      key: 'globalRateBps',
       clickable: true,
     },
   ];
