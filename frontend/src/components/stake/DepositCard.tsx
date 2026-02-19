@@ -71,7 +71,8 @@ export default function DepositCard(props: DepositCardProps) {
     updateMonthsState,
     userDepositsRewards,
     isUserDepositsRewardsLoaded,
-    updateUserDepositsRewards
+    updateUserDepositsRewards,
+    updateState
   } = useStakeContext()
 
   const { addNotification } = useNotification()
@@ -140,6 +141,7 @@ export default function DepositCard(props: DepositCardProps) {
               updateUserDepositsRewards()
               updateUserDeposits()
               updateMonthsState()
+              updateState()
             },
             onError: () => {}
           }).catch((err) => {
@@ -195,6 +197,7 @@ export default function DepositCard(props: DepositCardProps) {
               updateUserDepositsRewards()
               updateUserDeposits()
               updateMonthsState()
+              updateState()
               setActiveTab('closed')
             },
             onError: () => {}
@@ -243,6 +246,7 @@ export default function DepositCard(props: DepositCardProps) {
               updateUserDepositsRewards()
               updateUserDeposits()
               updateMonthsState()
+              updateState()
             },
             onError: () => {}
           }).catch((err) => {
@@ -273,6 +277,7 @@ export default function DepositCard(props: DepositCardProps) {
         setShowWithdraw(false)
         updateUserDeposits()
         updateMonthsState()
+        updateState()
       },
       onError: () => {}
     }).catch((err) => {
