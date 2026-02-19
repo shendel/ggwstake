@@ -42,6 +42,7 @@ const AdminStats: React.FC<AdminGameStatsProps> = (props) => {
     estimatedMonthlyRewardsSum,
     updateActiveDeposits
   } = useStakeContext()
+  
   useEffect(() => {
     if (isSummaryLoaded) {
       updateActiveDeposits()
