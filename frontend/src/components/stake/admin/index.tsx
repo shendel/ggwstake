@@ -159,7 +159,7 @@ const GGWStakeAdmin = (props) => {
             break;
           case 'stakeOracle':
             editTitle = `Change Pool Oracle`
-            editValue = oracle
+            editValue = stakeOracle
             editMessage = `This address/contract can add tokens to bank`
             editSaveFunc = `setStakeOracle`
             break;
