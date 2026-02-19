@@ -1,6 +1,5 @@
 require("dotenv").config()
 
-const ContractData = require("./abi/GGWBurnManager.json")
 const BigNumber = require("bignumber.js");
 const server_port = process.env.SERVER_PORT
 const server_ip = process.env.SERVER_IP
