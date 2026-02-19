@@ -165,7 +165,7 @@ export default function StakeProvider(props) {
     setIsUserDepositsFetching(true)
     setIsUserDepositsFetchingError(false)
     setIsUserDepositsLoaded(false)
-    
+    console.log('_doUserDeposits', userSummaryInfo, userSummaryInfo.depositsCount)
     fetchUserDeposits({
       address: contractAddress,
       chainId,
@@ -200,6 +200,7 @@ export default function StakeProvider(props) {
         });
       }
     }).then((userDeposits) => {
+      console.log('>>> USER DEPOSItS', userSummaryInfo.depositsCount, userDeposits)
       setIsUserDepositsFetching(false)
       setIsUserDepositsLoaded(true)
       // Финальное обновление списка с обновлением/добавлением всех депозитов
@@ -230,12 +231,8 @@ export default function StakeProvider(props) {
     })
   }
 
-  useEffect(() => {
-    console.log('>> userSummaryInfo updated', userSummaryInfo)
-    if (userSummaryInfo && userSummaryInfo.depositsCount) {
-      _doUserDeposits()
-    }
-  }, [ userSummaryInfo ])
+  
+  
   const [estimatedMonthlyRewardsSum, setEstimatedMonthlyRewardsSum] = useState(new BigNumber(0));
   const [isCalculatingEstimatedRewards, setIsCalculatingEstimatedRewards] = useState(false);
   const [isCalculatedEstimatedRewards, setIsCalculatedEstimatedRewards] = useState(false);
@@ -484,7 +481,16 @@ export default function StakeProvider(props) {
   const [ isNeedUpdateUserSummary, setIsNeedUpdateUserSummary ] = useState(true)
 
   useEffect(() => {
-    if (injectedAccount && summaryInfo && isNeedUpdateUserSummary) {
+    console.log('>> userSummaryInfo updated', userSummaryInfo)
+    if (userSummaryInfo && userSummaryInfo.depositsCount) {
+      console.log('>>> do fetch user deposits')
+      _doUserDeposits()
+    }
+  }, [ userSummaryInfo ])
+  
+  useEffect(() => {
+    if ((activeAccount && summaryInfo) || (activeAccount && summaryInfo && isNeedUpdateUserSummary)) {
+      console.log('>> DO UPDATE USER SUMMARy', userSummaryInfo)
       setIsFetchUserSummaryInfo(true)
       setIsNeedUpdateUserSummary(false)
       setIsUserSummaryInfoLoaded(false)
@@ -498,7 +504,7 @@ export default function StakeProvider(props) {
         setUserSummaryInfo(answer)
         setIsFetchUserSummaryInfo(false)
         setIsUserSummaryInfoLoaded(true)
-        _doUserDeposits()
+        //_doUserDeposits()//
         console.log('>> user summary', answer)
       }).catch((err) => {
         console.log('>> fail fetch user summary', err)
@@ -507,14 +513,16 @@ export default function StakeProvider(props) {
         setUserSummaryInfo(false)
       })
     } else {
+      console.log('>>> create user summary 1', activeAccount, summaryInfo, isNeedUpdateUserSummary)
       setUserSummaryInfo(false)
       setIsFetchUserSummaryInfo(false)
       setIsUserSummaryFetchError(false)
     }
-  }, [ injectedAccount, summaryInfo, tokenInfo, isNeedUpdateUserSummary ])
+  }, [ activeAccount, summaryInfo, tokenInfo, isNeedUpdateUserSummary ])
 
   useEffect(() => {
     if (injectedAccount != activeAccount) {
+    console.log('>>> create user summary 2', injectedAccount, activeAccount)
       setActiveAccount(injectedAccount)
       setUserDeposits([])
       setUserSummaryInfo(false)

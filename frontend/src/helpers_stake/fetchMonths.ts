@@ -43,7 +43,6 @@ const fetchMonths = (options) => {
           const {
             batch
           } = answer
-          console.log('>> months batch', batch)
           batchResolved(batch)
         }).catch((err) => {
           console.log('>>> Fail fetch all info', err)
