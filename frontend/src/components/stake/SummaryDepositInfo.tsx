@@ -2,6 +2,10 @@ import React from 'react';
 import { useStakeContext } from '@/contexts/StakeContext'
 import DotsLoader from '@/components/DotsLoader'
 import LoadingIndicator from '@/components/LoadingIndicator'
+import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
+import SwitchChainButton from '@/components/ui/SwitchChainButton'
+
+
 import {
   formatAmount,
   formatMonth,
@@ -41,7 +45,9 @@ const SummaryDepositInfo: React.FC<SummaryDepositInfoProps> = ({
 }) => {
   const {
     depositMonths,
+    chainId,
   } = useStakeContext()
+  const { injectedChainId } = useInjectedWeb3()
 
   const firstRewardMonth = (parseInt(currentMonth) + 1).toString();
   const unlockMonth = (parseInt(currentMonth) + parseInt(lockMonths)).toString();
@@ -101,21 +107,39 @@ const SummaryDepositInfo: React.FC<SummaryDepositInfoProps> = ({
 
       <div className="space-y-2">
         {isNeedApprove ? (
-          <button
-            onClick={onApprove}
-            disabled={isApproving || isCreating} // Отключаем при создании
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isApproving ? 'Approving...' : `Approve ${tokenSymbol} for Deposit`}
-          </button>
+          <>
+            {chainId !== injectedChainId ? (
+              <SwitchChainButton
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Switch chain to {CHAIN_TITLE} for Approve ${tokenSymbol}`}
+              />
+            ) : (
+              <button
+                onClick={onApprove}
+                disabled={isApproving || isCreating} // Отключаем при создании
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isApproving ? 'Approving...' : `Approve ${tokenSymbol} for Deposit`}
+              </button>
+            )}
+          </>
         ) : (
-          <button
-            onClick={onCreate}
-            disabled={isCreating || isApproving} // Отключаем при апруве
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isCreating ? 'Creating...' : 'Create Deposit'}
-          </button>
+          <>
+            {chainId !== injectedChainId ? (
+              <SwitchChainButton
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title={`Switch chain to {CHAIN_TITLE} for Create Deposit`}
+              />
+            ) : (
+              <button
+                onClick={onCreate}
+                disabled={isCreating || isApproving} // Отключаем при апруве
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreating ? 'Creating...' : 'Create Deposit'}
+              </button>
+            )}
+          </>
         )}
 
         <button
