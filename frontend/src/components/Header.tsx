@@ -3,6 +3,7 @@ import { DisconnectWalletButton } from '@/web3/DisconnectWalletButton'
 
 import React, { useState,useEffect } from "react";
 import { useInjectedWeb3 } from '@/web3/InjectedWeb3Provider'
+import { useStakeContext } from '@/contexts/StakeContext'
 import { fromWei } from '@/helpers/wei'
 
 import Button from '@/components/ui/Button'
@@ -14,6 +15,8 @@ const formatUrl = (href) => {
 
 import { MAINNET_CHAIN_ID } from '@/config'
 import { GET_CHAIN_BYID } from '@/web3/chains'
+import { HEADER_MENU } from '@/config'
+
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,18 +27,30 @@ const Header = () => {
     injectedChainId,
     balance
   } = useInjectedWeb3()
-  
+  const {
+    summaryInfo: {
+      owner
+    }
+  } = useStakeContext()
+
   const chainInfo = GET_CHAIN_BYID(MAINNET_CHAIN_ID)
   
   const isOwner = false
 
-  const menuItems = window.GGW_STAKE_MENU || [
-    {
-      title: 'Home',
-      url: '/'
-    },
+  const menuItems = [
+    ...(
+      window.GGW_STAKE_MENU || HEADER_MENU || [{ title: 'Home', url: '/', blank: true }],
+    ),
+    ...(
+      (injectedAccount && owner && injectedAccount.toLowerCase() == owner.toLowerCase()) ? [
+        {
+          title: 'Manage',
+          url: '/#/admin'
+        }
+      ] : []
+    )
   ]
-  
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -57,19 +72,19 @@ const Header = () => {
     return (
       <ul>
         {menuItems.map((item, key) => {
-          const { title, url, childs } = item
+          const { title, url, blank, childs } = item
           return (
             <li key={key} className={(childs && childs.length && childs.length > 0) ? 'menu-item-has-children' : ''}>
-              <a href={url}>
+              <a href={url} target={(blank) ? '_blank' : ''}>
                 <span className="text-white">{title}</span>
               </a>
               {(childs && childs.length && childs.length > 0) && (
                 <ul>
                   {childs.map((subItem, subKey) => {
-                    const { title, url } = subItem
+                    const { title, url, blank } = subItem
                     return (
                       <li key={subKey}>
-                        <a href={url}>
+                        <a href={url} target={(blank) ? '_blank' : ''}>
                           <span className="text-white">{title}</span>
                         </a>
                       </li>

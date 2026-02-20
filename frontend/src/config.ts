@@ -15,3 +15,10 @@ export const LOCK_MONTHS_OPTIONS = publicRuntimeConfig?.LOCK_MONTHS_OPTIONS || [
   { value: 12, title: '1 year' }
 ]
 
+export const HEADER_MENU = publicRuntimeConfig?.HEADER_MENU || [
+  {
+    title: 'Home',
+    url: '/',
+    blank: true
+  },
+]
