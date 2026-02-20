@@ -1,0 +1,51 @@
+{
+	"compiler": {
+		"version": "0.8.20+commit.a1b79de6"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "ReentrancyGuardReentrantCall",
+				"type": "error"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"GGWStake_flattened.sol": "ReentrancyGuard"
+		},
+		"evmVersion": "shanghai",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"GGWStake_flattened.sol": {
+			"keccak256": "0x4e73a33d0741caf45e2d4bfb9ebd98f1e5b9603c92d27c8728b6cde27f67458f",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://ba3cc713de917c6a77cc524786fa661859c8e90dde2659918870e56ddf112360",
+				"dweb:/ipfs/QmccgWgJr2DhAcDQ3TxngDAL2tqJfyoUj2ZPwtLJdkPTRK"
+			]
+		}
+	},
+	"version": 1
+}
