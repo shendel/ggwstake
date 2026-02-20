@@ -382,13 +382,6 @@
 			}
 		],
 		"devdoc": {
-			"errors": {
-				"ReentrancyGuardReentrantCall()": [
-					{
-						"details": "Unauthorized reentrant call."
-					}
-				]
-			},
 			"kind": "dev",
 			"methods": {},
 			"version": 1
@@ -415,20 +408,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"@openzeppelin/contracts/utils/ReentrancyGuard.sol": {
-			"keccak256": "0x11a5a79827df29e915a12740caf62fe21ebe27c08c9ae3e09abe9ee3ba3866d3",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://3cf0c69ab827e3251db9ee6a50647d62c90ba580a4d7bbff21f2bea39e7b2f4a",
-				"dweb:/ipfs/QmZiKwtKU1SBX4RGfQtY7PZfiapbbu6SZ9vizGQD9UHjRA"
-			]
-		},
 		"GGWStakeAcumulate.sol": {
-			"keccak256": "0xd53b42b21bbe2f60e4dd615ba18a55f36f9b82c4ab6e56f99d9beb3e40bb354b",
+			"keccak256": "0x19155ff4e2da0973deb0237701b86db69f0f577df1765f322e58caa8361e37ab",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://8c554a5d11eb9bbf1ea77cd8714c897a0ffd9994e320d1ef0ddd8f8a0b177f49",
-				"dweb:/ipfs/QmbC9hmjYhiQVSuAEXdAjtswb8NFhiiL9v7hq7ZiRMVJQF"
+				"bzz-raw://d05e340f676b648d840b1449a78a22fe08563ae306c2102582162715bc8d4945",
+				"dweb:/ipfs/Qma1nSZ4QAu9n43aCSraKRtvTZryc8fyXJuN1h95tkGPXh"
 			]
 		}
 	},

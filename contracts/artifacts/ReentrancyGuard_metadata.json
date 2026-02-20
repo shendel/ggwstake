@@ -24,7 +24,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"GGWStake_flattened.sol": "ReentrancyGuard"
+			"GGWStakeAcumulate.sol": "ReentrancyGuard"
 		},
 		"evmVersion": "shanghai",
 		"libraries": {},
@@ -38,12 +38,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"GGWStake_flattened.sol": {
-			"keccak256": "0x4e73a33d0741caf45e2d4bfb9ebd98f1e5b9603c92d27c8728b6cde27f67458f",
+		"GGWStakeAcumulate.sol": {
+			"keccak256": "0x19155ff4e2da0973deb0237701b86db69f0f577df1765f322e58caa8361e37ab",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://ba3cc713de917c6a77cc524786fa661859c8e90dde2659918870e56ddf112360",
-				"dweb:/ipfs/QmccgWgJr2DhAcDQ3TxngDAL2tqJfyoUj2ZPwtLJdkPTRK"
+				"bzz-raw://d05e340f676b648d840b1449a78a22fe08563ae306c2102582162715bc8d4945",
+				"dweb:/ipfs/Qma1nSZ4QAu9n43aCSraKRtvTZryc8fyXJuN1h95tkGPXh"
 			]
 		}
 	},

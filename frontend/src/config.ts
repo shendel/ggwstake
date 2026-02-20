@@ -18,7 +18,6 @@ export const LOCK_MONTHS_OPTIONS = publicRuntimeConfig?.LOCK_MONTHS_OPTIONS || [
 export const HEADER_MENU = publicRuntimeConfig?.HEADER_MENU || [
   {
     title: 'Home',
-    url: '/',
-    blank: true
+    url: '/'
   },
 ]

@@ -39,7 +39,7 @@ const Header = () => {
 
   const menuItems = [
     ...(
-      window.GGW_STAKE_MENU || HEADER_MENU || [{ title: 'Home', url: '/', blank: true }],
+      window.GGW_STAKE_MENU || HEADER_MENU || [{ title: 'Home', url: '/' }],
     ),
     ...(
       (injectedAccount && owner && injectedAccount.toLowerCase() == owner.toLowerCase()) ? [
